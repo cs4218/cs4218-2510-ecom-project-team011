@@ -19,6 +19,8 @@ jobs:
           node-version: 24
       - run: npm install && cd client && npm install && cd ..
       - run: npm run test:frontend
+        if: '!cancelled()'
       - run: npm run test:backend
+        if: '!cancelled()'
 
 
