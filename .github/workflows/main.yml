@@ -1,12 +1,6 @@
-name: Run Tests (Main)
+name: Run Tests
 
-on: 
-  pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - main
+on: ['pull_request', 'push']
 
 jobs:
   test:
@@ -18,9 +12,10 @@ jobs:
         with: 
           node-version: 24
       - run: npm install && cd client && npm install && cd ..
-      - run: npm run test:frontend
-        if: '!cancelled()'
-      - run: npm run test:backend
-        if: '!cancelled()'
-
-
+      - run: |
+          if [ "$GITHUB_BASE_REF" == "main" ]; then
+            npm run test:frontend
+            npm run test:backend
+          else
+            npm run test:frontend -- --onlyChanged
+            npm run test:backend -- onlyChanged 
