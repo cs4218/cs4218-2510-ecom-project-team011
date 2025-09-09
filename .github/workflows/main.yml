@@ -13,7 +13,8 @@ jobs:
           node-version: 24
       - run: npm install && cd client && npm install && cd ..
       - run: |
-          if [ "$GITHUB_REF" == "main" ]; then
+          echo $GITHUB_REF
+          if [ $GITHUB_REF == "main" ]; then
             npm run test:frontend
             npm run test:backend
           else
