@@ -12,12 +12,8 @@ jobs:
         with: 
           node-version: 24
       - run: npm install && cd client && npm install && cd ..
+        name: Set up dependencies
       - run: |
-          echo $GITHUB_REF
-          if [ $GITHUB_REF == "main" ]; then
-            npm run test:frontend
-            npm run test:backend
-          else
-            npm run test:frontend -- --onlyChanged
-            npm run test:backend -- onlyChanged 
-          fi
+          npm run test:frontend
+          npm run test:backend
+        name: Run tests
