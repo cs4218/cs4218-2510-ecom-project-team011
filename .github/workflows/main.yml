@@ -19,3 +19,4 @@ jobs:
           else
             npm run test:frontend -- --onlyChanged
             npm run test:backend -- onlyChanged 
+          fi
