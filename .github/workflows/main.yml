@@ -18,6 +18,7 @@ jobs:
         with: 
           node-version: 24
       - run: npm install && cd client && npm install && cd ..
-      - run: npm run test
+      - run: npm run test:frontend
+      - run: npm run test:backend
 
 
