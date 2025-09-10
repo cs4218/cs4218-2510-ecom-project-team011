@@ -1,0 +1,11 @@
+# SonarQube server settings
+sonar.host.url=http://localhost:9000
+sonar.token=YOUR_SONAR_TOKEN
+
+# Project identification
+sonar.projectKey=econ
+sonar.projectName=econ
+sonar.projectVersion=1.0
+
+# Analysis settings
+sonar.sources=client
