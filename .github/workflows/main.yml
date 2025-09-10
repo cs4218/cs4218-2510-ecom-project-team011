@@ -1,0 +1,19 @@
+name: Run Tests
+
+on: ['pull_request', 'push']
+
+jobs:
+  test:
+    name: Run unit tests
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: 
+          node-version: 24
+      - run: npm install && cd client && npm install && cd ..
+        name: Set up dependencies
+      - run: |
+          npm run test:frontend
+          npm run test:backend
+        name: Run tests
