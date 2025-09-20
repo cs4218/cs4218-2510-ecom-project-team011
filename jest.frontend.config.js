@@ -22,14 +22,16 @@ export default {
   // only run these tests
   testMatch: [
     "<rootDir>/client/src/pages/Auth/*.test.js",
-    "<rootDir>/client/src/context/*.test.js"
+    "<rootDir>/client/src/context/*.test.js",
+    "<rootDir>/client/src/components/Routes/*.test.js",
   ],
 
   // jest code coverage
   collectCoverage: true,
   collectCoverageFrom: [
     "client/src/pages/Auth/**",
-    "client/src/context/**"
+    "client/src/context/**",
+    "client/src/components/**",
   ],
   // coverageThreshold: {
   //   global: {
