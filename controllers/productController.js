@@ -72,15 +72,15 @@ export const getProductController = async (req, res) => {
       .sort({ createdAt: -1 });
     res.status(200).send({
       success: true,
-      counTotal: products.length,
-      message: "ALlProducts ",
+      countTotal: products.length,
+      message: "All Products",
       products,
     });
   } catch (error) {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Erorr in getting products",
+      message: "Error in getting products",
       error: error.message,
     });
   }
@@ -101,7 +101,7 @@ export const getSingleProductController = async (req, res) => {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Eror while getitng single product",
+      message: "Error while getting single product",
       error,
     });
   }
@@ -119,7 +119,7 @@ export const productPhotoController = async (req, res) => {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Erorr while getting photo",
+      message: "Error while getting photo",
       error,
     });
   }
@@ -143,7 +143,7 @@ export const deleteProductController = async (req, res) => {
   }
 };
 
-//upate producta
+//update products
 export const updateProductController = async (req, res) => {
   try {
     const { name, description, price, category, quantity, shipping } =
@@ -208,7 +208,7 @@ export const productFiltersController = async (req, res) => {
     console.log(error);
     res.status(400).send({
       success: false,
-      message: "Error WHile Filtering Products",
+      message: "Error While Filtering Products",
       error,
     });
   }
@@ -232,7 +232,7 @@ export const productCountController = async (req, res) => {
   }
 };
 
-// product list base on page
+// product list based on page
 export const productListController = async (req, res) => {
   try {
     const perPage = 6;
@@ -251,7 +251,7 @@ export const productListController = async (req, res) => {
     console.log(error);
     res.status(400).send({
       success: false,
-      message: "error in per page ctrl",
+      message: "error in per page controller",
       error,
     });
   }
@@ -274,14 +274,14 @@ export const searchProductController = async (req, res) => {
     console.log(error);
     res.status(400).send({
       success: false,
-      message: "Error In Search Product API",
+      message: "Error In Search Product Controller",
       error,
     });
   }
 };
 
 // similar products
-export const realtedProductController = async (req, res) => {
+export const relatedProductController = async (req, res) => {
   try {
     const { pid, cid } = req.params;
     const products = await productModel
@@ -300,13 +300,13 @@ export const realtedProductController = async (req, res) => {
     console.log(error);
     res.status(400).send({
       success: false,
-      message: "error while geting related product",
+      message: "error while getting related products",
       error,
     });
   }
 };
 
-// get prdocyst by catgory
+// get products by catgory
 export const productCategoryController = async (req, res) => {
   try {
     const category = await categoryModel.findOne({ slug: req.params.slug });
