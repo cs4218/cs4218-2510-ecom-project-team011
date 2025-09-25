@@ -31,6 +31,7 @@ export default {
   collectCoverage: true,
   collectCoverageFrom: [
     "client/src/pages/**",
+    "client/src/pages/Auth/**",
     "client/src/context/**",
     "client/src/components/**",
   ],
