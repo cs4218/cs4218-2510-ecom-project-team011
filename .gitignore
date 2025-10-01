@@ -7,3 +7,4 @@ node_modules
 .env
 sonar-project.properties
 /coverage
+/schema/*.json
