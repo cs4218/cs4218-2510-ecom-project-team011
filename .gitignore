@@ -6,4 +6,4 @@ node_modules
 
 .env
 sonar-project.properties
-/coverage
+/coverage.DS_Store
