@@ -42,8 +42,21 @@ window.matchMedia = window.matchMedia || function() {
   };  
 
 describe('Login Component', () => {
+    let consoleErrorSpy;
+    let consoleLogSpy;
+
+    beforeAll(() => {
+        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    });
+
     beforeEach(() => {
         jest.clearAllMocks();
+    });
+
+    afterAll(() => {
+        consoleErrorSpy.mockRestore();
+        consoleLogSpy.mockRestore();
     });
 
     it('renders login form', () => {
