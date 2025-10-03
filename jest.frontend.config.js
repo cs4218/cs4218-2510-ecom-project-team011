@@ -30,6 +30,7 @@ export default {
     "<rootDir>/client/src/components/Form/*.test.js",
     "<rootDir>/client/src/pages/admin/Users.test.js",
     "<rootDir>/client/src/pages/Search.test.js",
+    "<rootDir>/client/src/pages/admin/Products.test.js",
     "<rootDir>/client/src/pages/*.test.js"
   ],
 
