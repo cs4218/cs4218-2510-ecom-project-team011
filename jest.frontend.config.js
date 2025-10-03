@@ -26,6 +26,7 @@ export default {
     "<rootDir>/client/src/components/Footer.test.js", //To be changed to all components later
     "<rootDir>/client/src/components/Header.test.js",
     "<rootDir>/client/src/components/Layout.test.js",
+    "<rootDir>/client/src/components/Spinner.test.js",
     "<rootDir>/client/src/pages/*.test.js"
   ],
 
