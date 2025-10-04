@@ -19,40 +19,41 @@ var gateway = new braintree.BraintreeGateway({
 
 export const createProductController = async (req, res) => {
   try {
-    const { name, description, price, category, quantity, shipping } = req.fields;
+    const { name, description, price, category, quantity, shipping } =
+      req.fields;
     const { photo } = req.files;
 
     // Validation
     switch (true) {
       case !name:
-        return res.status(400).send({ 
-          success: false, 
-          message: "Product name is required" 
+        return res.status(400).send({
+          success: false,
+          message: "Product name is required",
         });
       case !description:
-        return res.status(400).send({ 
-          success: false, 
-          message: "Product description is required" 
+        return res.status(400).send({
+          success: false,
+          message: "Product description is required",
         });
       case !price:
-        return res.status(400).send({ 
-          success: false, 
-          message: "Product price is required" 
+        return res.status(400).send({
+          success: false,
+          message: "Product price is required",
         });
       case !category:
-        return res.status(400).send({ 
-          success: false, 
-          message: "Product category is required" 
+        return res.status(400).send({
+          success: false,
+          message: "Product category is required",
         });
       case !quantity:
-        return res.status(400).send({ 
-          success: false, 
-          message: "Product quantity is required" 
+        return res.status(400).send({
+          success: false,
+          message: "Product quantity is required",
         });
       case photo && photo.size > 1000000:
         return res.status(400).send({
           success: false,
-          message: "Photo is required and should be less than 1MB"
+          message: "Photo is required and should be less than 1MB",
         });
     }
 
@@ -62,7 +63,7 @@ export const createProductController = async (req, res) => {
       products.photo.contentType = photo.type;
     }
     await products.save();
-    
+
     res.status(201).send({
       success: true,
       message: "Product created successfully",
@@ -87,7 +88,7 @@ export const getProductController = async (req, res) => {
       .select("-photo")
       .limit(12)
       .sort({ createdAt: -1 });
-    
+
     res.status(200).send({
       success: true,
       countTotal: products.length,
@@ -100,7 +101,6 @@ export const getProductController = async (req, res) => {
       success: false,
       message: "Error in getting products",
       error: error.message,
-      message: "Error retrieving products",
     });
   }
 };
@@ -162,15 +162,17 @@ export const productPhotoController = async (req, res) => {
 //delete controller
 export const deleteProductController = async (req, res) => {
   try {
-    const product = await productModel.findByIdAndDelete(req.params.pid).select("-photo");
-    
+    const product = await productModel
+      .findByIdAndDelete(req.params.pid)
+      .select("-photo");
+
     if (!product) {
       return res.status(404).send({
         success: false,
-        message: "Product not found"
+        message: "Product not found",
       });
     }
-    
+
     res.status(200).send({
       success: true,
       message: "Product deleted successfully",
@@ -188,40 +190,41 @@ export const deleteProductController = async (req, res) => {
 //update product
 export const updateProductController = async (req, res) => {
   try {
-    const { name, description, price, category, quantity, shipping } = req.fields;
+    const { name, description, price, category, quantity, shipping } =
+      req.fields;
     const { photo } = req.files;
 
     // Validation
     switch (true) {
       case !name:
-        return res.status(400).send({ 
-          success: false, 
-          message: "Product name is required" 
+        return res.status(400).send({
+          success: false,
+          message: "Product name is required",
         });
       case !description:
-        return res.status(400).send({ 
-          success: false, 
-          message: "Product description is required" 
+        return res.status(400).send({
+          success: false,
+          message: "Product description is required",
         });
       case !price:
-        return res.status(400).send({ 
-          success: false, 
-          message: "Product price is required" 
+        return res.status(400).send({
+          success: false,
+          message: "Product price is required",
         });
       case !category:
-        return res.status(400).send({ 
-          success: false, 
-          message: "Product category is required" 
+        return res.status(400).send({
+          success: false,
+          message: "Product category is required",
         });
       case !quantity:
-        return res.status(400).send({ 
-          success: false, 
-          message: "Product quantity is required" 
+        return res.status(400).send({
+          success: false,
+          message: "Product quantity is required",
         });
       case photo && photo.size > 1000000:
         return res.status(400).send({
           success: false,
-          message: "Photo should be less than 1MB"
+          message: "Photo should be less than 1MB",
         });
     }
 
@@ -230,20 +233,20 @@ export const updateProductController = async (req, res) => {
       { ...req.fields, slug: slugify(name) },
       { new: true }
     );
-    
+
     if (!products) {
       return res.status(404).send({
         success: false,
-        message: "Product not found"
+        message: "Product not found",
       });
     }
-    
+
     if (photo) {
       products.photo.data = fs.readFileSync(photo.path);
       products.photo.contentType = photo.type;
     }
     await products.save();
-    
+
     res.status(200).send({
       success: true,
       message: "Product updated successfully",
@@ -269,7 +272,7 @@ export const productFiltersController = async (req, res) => {
       args.price = { $gte: radio[0], $lte: radio[1] };
     }
     const products = await productModel.find(args);
-    
+
     res.status(200).send({
       success: true,
       message: "Products filtered successfully",
@@ -289,7 +292,7 @@ export const productFiltersController = async (req, res) => {
 export const productCountController = async (req, res) => {
   try {
     const total = await productModel.find({}).estimatedDocumentCount();
-    
+
     res.status(200).send({
       success: true,
       message: "Product count retrieved successfully",
@@ -310,14 +313,14 @@ export const productListController = async (req, res) => {
   try {
     const perPage = 6;
     const page = req.params.page ? req.params.page : 1;
-    
+
     const products = await productModel
       .find({})
       .select("-photo")
       .skip((page - 1) * perPage)
       .limit(perPage)
       .sort({ createdAt: -1 });
-    
+
     res.status(200).send({
       success: true,
       message: "Products retrieved successfully",
@@ -337,14 +340,15 @@ export const productListController = async (req, res) => {
 export const searchProductController = async (req, res) => {
   try {
     const { keyword } = req.params;
-    
-    if (!keyword) {
-      return res.status(400).send({
+
+    // check and validate keyword
+    if (!keyword || keyword.length == 0) {
+      res.status(400).send({
         success: false,
-        message: "Search keyword is required"
+        message: "Please provide a keyword",
       });
     }
-    
+
     const results = await productModel
       .find({
         $or: [
@@ -353,7 +357,7 @@ export const searchProductController = async (req, res) => {
         ],
       })
       .select("-photo");
-    
+
     res.status(200).send({
       success: true,
       message: "Search completed successfully",
@@ -373,7 +377,7 @@ export const searchProductController = async (req, res) => {
 export const relatedProductController = async (req, res) => {
   try {
     const { pid, cid } = req.params;
-    
+
     const products = await productModel
       .find({
         category: cid,
@@ -382,7 +386,7 @@ export const relatedProductController = async (req, res) => {
       .select("-photo")
       .limit(3)
       .populate("category");
-    
+
     res.status(200).send({
       success: true,
       message: "Related products retrieved successfully",
@@ -402,19 +406,19 @@ export const relatedProductController = async (req, res) => {
 export const productCategoryController = async (req, res) => {
   try {
     const category = await categoryModel.findOne({ slug: req.params.slug });
-    
+
     if (!category) {
       return res.status(404).send({
         success: false,
-        message: "Category not found"
+        message: "Category not found",
       });
     }
-    
+
     const products = await productModel.find({ category }).populate("category");
-    
+
     res.status(200).send({
       success: true,
-      message: "Products by category retrieved successfully",
+      message: "Products by category retrieved",
       category,
       products,
     });
@@ -422,8 +426,8 @@ export const productCategoryController = async (req, res) => {
     console.log(error);
     res.status(500).send({
       success: false,
-      error: error.message,
-      message: "Error retrieving products by category",
+      error: error,
+      message: "Error retrieving products",
     });
   }
 };
@@ -437,13 +441,13 @@ export const braintreeTokenController = async (req, res) => {
         res.status(500).send({
           success: false,
           error: err.message,
-          message: "Error generating payment token"
+          message: "Error generating payment token",
         });
       } else {
         res.status(200).send({
           success: true,
           message: "Payment token generated successfully",
-          clientToken: response.clientToken
+          clientToken: response.clientToken,
         });
       }
     });
@@ -452,7 +456,7 @@ export const braintreeTokenController = async (req, res) => {
     res.status(500).send({
       success: false,
       error: error.message,
-      message: "Error generating payment token"
+      message: "Error generating payment token",
     });
   }
 };
@@ -461,33 +465,33 @@ export const braintreeTokenController = async (req, res) => {
 export const brainTreePaymentController = async (req, res) => {
   try {
     const { nonce, cart } = req.body;
-    
+
     if (!nonce) {
       return res.status(400).send({
         success: false,
-        message: "Payment nonce is required"
+        message: "Payment nonce is required",
       });
     }
-    
+
     if (!cart || cart.length === 0) {
       return res.status(400).send({
         success: false,
-        message: "Cart is required and cannot be empty"
+        message: "Cart is required and cannot be empty",
       });
     }
-    
+
     if (!req.user) {
       return res.status(401).send({
         success: false,
-        message: "User authentication required"
+        message: "User authentication required",
       });
     }
-    
+
     let total = 0;
     cart.map((i) => {
       total += i.price;
     });
-    
+
     let newTransaction = gateway.transaction.sale(
       {
         amount: total,
@@ -503,17 +507,17 @@ export const brainTreePaymentController = async (req, res) => {
             payment: result,
             buyer: req.user._id,
           }).save();
-          
+
           res.status(200).send({
             success: true,
             message: "Payment processed successfully",
-            transaction: result
+            transaction: result,
           });
         } else {
           res.status(500).send({
             success: false,
             error: error.message,
-            message: "Payment processing failed"
+            message: "Payment processing failed",
           });
         }
       }
@@ -523,7 +527,7 @@ export const brainTreePaymentController = async (req, res) => {
     res.status(500).send({
       success: false,
       error: error.message,
-      message: "Error processing payment"
+      message: "Error processing payment",
     });
   }
 };
