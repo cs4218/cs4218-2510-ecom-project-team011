@@ -8,3 +8,4 @@ node_modules
 sonar-project.properties
 /coverage
 /schema/*.json
+/coverage.DS_Store
