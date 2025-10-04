@@ -1,7 +1,9 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
+import userEvent from "@testing-library/user-event";
 import UserMenu from "./UserMenu"; // adjust path
+import { act } from 'react-dom/test-utils';
 
 describe("UserMenu", () => {
   it("renders dashboard heading", () => {
@@ -38,16 +40,41 @@ describe("UserMenu", () => {
     );
   });
 
-  it.skip("applies correct CSS classes to links", () => {
+  it("navigates to Profile page on click", async () => {
     render(
-      <MemoryRouter>
-        <UserMenu />
+      <MemoryRouter initialEntries={["/"]}>
+        <Routes>
+          <Route path="/" element={<UserMenu />} />
+          <Route path="/dashboard/user/profile" element={<div>Profile Page</div>} />
+        </Routes>
       </MemoryRouter>
     );
 
-    const profileLink = screen.getByText("Profile");
-    expect(profileLink).toHaveClass("list-group-item");
-    expect(profileLink).toHaveClass("list-group-item-action");
+    // simulate click
+    
+    act(() => {
+      userEvent.click(screen.getByText("Profile"));
+    })
+
+    // assert navigation
+    expect(await screen.findByText("Profile Page")).toBeInTheDocument();
   });
-  // TODO: Simulate clicking
+
+  it("navigates to Orders page on click", async () => {
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <Routes>
+          <Route path="/" element={<UserMenu />} />
+          <Route path="/dashboard/user/orders" element={<div>Orders Page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    act(() => {
+      userEvent.click(screen.getByText("Orders"));
+    })
+
+    expect(await screen.findByText("Orders Page")).toBeInTheDocument();
+  });
+
 });
