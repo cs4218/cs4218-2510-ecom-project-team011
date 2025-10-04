@@ -170,6 +170,9 @@ export const updateProfileController = async (req, res) => {
     const { name, email, password, address, phone } = req.body;
     const user = await userModel.findById(req.user._id);
     //password
+    if (!user) {
+      return res.json({ error: "User does not exist. Please log out and register again." });
+    }
     if (password && password.length < 6) {
       return res.json({ error: "Passsword is required and at least 6 character long" });
     }
@@ -190,7 +193,7 @@ export const updateProfileController = async (req, res) => {
       updatedUser,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(400).send({
       success: false,
       message: "Error while updating profile",
