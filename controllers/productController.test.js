@@ -1156,7 +1156,7 @@ describe("Product Controller Tests", () => {
       expect(mockQuery.populate).toHaveBeenCalledWith("category");
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.send).toHaveBeenCalledWith({
-        message: "Related products retrieved successfully",
+        message: "Related products retrieved",
         success: true,
         products: mockProducts,
       });
@@ -1183,7 +1183,7 @@ describe("Product Controller Tests", () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.send).toHaveBeenCalledWith({
         success: false,
-        message: "Error retrieving related products",
+        message: "Error retrieving products",
         error,
       });
     });

@@ -18,6 +18,7 @@ jest.mock("./../components/Layout", () => {
   };
 });
 
+// Generated with the help of AI (ChatGPT and Github Copilot)
 describe("ProductDetails", () => {
   const mockProduct = {
     _id: "1",
@@ -60,7 +61,8 @@ describe("ProductDetails", () => {
       _id: "4",
       name: "Test Product 4",
       price: 300,
-      description: "Test Description 4reallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallylong",
+      description:
+        "Test Description 4reallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallylong",
       category: {
         _id: "1",
         name: "Electronics",
@@ -70,8 +72,14 @@ describe("ProductDetails", () => {
     },
   ];
 
+  beforeAll(() => {
+    jest.spyOn(console, "error").mockImplementation(() => {});
+    jest.spyOn(console, "log").mockImplementation(() => {});
+  });
+
   beforeEach(() => {
     // Assign
+    jest.clearAllMocks();
     axios.get.mockImplementation((url) => {
       if (url.includes("/product/get-product")) {
         return Promise.resolve({
@@ -92,12 +100,6 @@ describe("ProductDetails", () => {
     });
   });
 
-  beforeAll(() => {
-    jest.clearAllMocks();
-    jest.spyOn(console, "error").mockImplementation(() => {});
-    jest.spyOn(console, "log").mockImplementation(() => {});
-  });
-
   afterAll(() => {
     console.error.mockRestore();
     console.log.mockRestore();
@@ -113,7 +115,9 @@ describe("ProductDetails", () => {
       expect(screen.getByAltText(mockProduct.name)).toBeInTheDocument();
       expect(screen.getByText(mockProducts[0].description)).toBeInTheDocument();
       expect(screen.getByText(mockProducts[1].description)).toBeInTheDocument();
-      expect(screen.getByText(mockProducts[2].description.substring(0, 60) + "...")).toBeInTheDocument();
+      expect(
+        screen.getByText(mockProducts[2].description.substring(0, 60) + "...")
+      ).toBeInTheDocument();
     });
   });
 
@@ -121,16 +125,23 @@ describe("ProductDetails", () => {
     // Act
     render(<ProductDetails />);
 
+    // Assert
     await waitFor(() => {
-      const moreDetailsButtons = screen.getAllByRole("button", { name: /More Details/i });
+      const moreDetailsButtons = screen.getAllByRole("button", {
+        name: /More Details/i,
+      });
 
-      fireEvent.click(moreDetailsButtons[0])
+      fireEvent.click(moreDetailsButtons[0]);
 
-      expect(mockNavigate).toHaveBeenCalledWith(`/product/${mockProducts[0].slug}`);
+      expect(mockNavigate).toHaveBeenCalledWith(
+        `/product/${mockProducts[0].slug}`
+      );
 
-      fireEvent.click(moreDetailsButtons[1])
+      fireEvent.click(moreDetailsButtons[1]);
 
-      expect(mockNavigate).toHaveBeenCalledWith(`/product/${mockProducts[1].slug}`);
+      expect(mockNavigate).toHaveBeenCalledWith(
+        `/product/${mockProducts[1].slug}`
+      );
     });
   });
 });
