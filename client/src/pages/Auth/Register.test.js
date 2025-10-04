@@ -44,8 +44,21 @@ window.matchMedia = window.matchMedia || function() {
       
 
 describe('Register Component', () => {
+  let consoleErrorSpy;
+  let consoleLogSpy;
+
+  beforeAll(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  afterAll(() => {
+    consoleErrorSpy.mockRestore();
+    consoleLogSpy.mockRestore();
   });
 
   it('should register the user successfully', async () => {
