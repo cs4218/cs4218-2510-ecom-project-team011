@@ -8,18 +8,76 @@ import About from "./About";
 jest.mock("../components/Layout", () => ({ children }) => <div>{children}</div>);
 
 describe("About page", () => {
-  test("renders about image and text", () => {
+  test("renders about image", () => {
+    // Arrange
     render(
       <MemoryRouter>
         <About />
       </MemoryRouter>
     );
 
+    // Act
     const img = screen.getByRole("img", { name: /contactus/i });
+    
+    // Assert
     expect(img).toBeInTheDocument();
-    expect(img).toHaveAttribute("src", "/images/about.jpeg");
+  });
 
+  test("image has correct source attribute", () => {
+    // Arrange
+    render(
+      <MemoryRouter>
+        <About />
+      </MemoryRouter>
+    );
+
+    // Act
+    const img = screen.getByRole("img", { name: /contactus/i });
+    
+    // Assert
+    expect(img).toHaveAttribute("src", "/images/about.jpeg");
+  });
+
+  test("image has correct width style", () => {
+    // Arrange
+    render(
+      <MemoryRouter>
+        <About />
+      </MemoryRouter>
+    );
+
+    // Act
+    const img = screen.getByRole("img", { name: /contactus/i });
+    
+    // Assert
+    expect(img).toHaveStyle("width: 100%");
+  });
+
+  test("renders about text content", () => {
+    // Arrange
+    render(
+      <MemoryRouter>
+        <About />
+      </MemoryRouter>
+    );
+
+    // Act Assert
     expect(screen.getByText(/Add text/i)).toBeInTheDocument();
+  });
+
+  test("image has correct alt text for accessibility", () => {
+    // Arrange
+    render(
+      <MemoryRouter>
+        <About />
+      </MemoryRouter>
+    );
+
+    // Act
+    const img = screen.getByRole("img", { name: /contactus/i });
+    
+    // Assert
+    expect(img).toHaveAttribute("alt", "contactus");
   });
 });
 

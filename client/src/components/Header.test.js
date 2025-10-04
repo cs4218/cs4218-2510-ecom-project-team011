@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import "@testing-library/jest-dom";
 
@@ -34,7 +34,7 @@ describe("Header", () => {
     ]);
   });
 
-  test("renders brand, Home, Register and Login when unauthenticated", () => {
+  test("renders category dropdown items", () => {
     // Arrange unauthenticated state and empty cart
     useAuth.mockReturnValue([{ user: null, token: "" }, jest.fn()]);
     useCart.mockReturnValue([[]]);
@@ -45,25 +45,78 @@ describe("Header", () => {
       </MemoryRouter>
     );
 
-    // Brand
-    expect(screen.getByText(/Virtual Vault/i)).toBeInTheDocument();
-
-    // Basic nav links
-    expect(screen.getByRole("link", { name: /home/i })).toHaveAttribute("href", "/");
-    expect(screen.getByRole("link", { name: /register/i })).toHaveAttribute("href", "/register");
-    expect(screen.getByRole("link", { name: /login/i })).toHaveAttribute("href", "/login");
-
-    // Categories dropdown content is rendered (exact match for the toggle link)
+    // Assert
     expect(screen.getByRole("link", { name: /^categories$/i })).toHaveAttribute("href", "/categories");
     expect(screen.getByRole("link", { name: /all categories/i })).toHaveAttribute("href", "/categories");
     expect(screen.getByRole("link", { name: /cat one/i })).toHaveAttribute("href", "/category/cat-one");
     expect(screen.getByRole("link", { name: /cat two/i })).toHaveAttribute("href", "/category/cat-two");
+  });
 
-    // Cart link present with badge (count may be hidden visually but link exists)
+  test("renders brand logo", () => {
+    // Arrange unauthenticated state and empty cart
+    useAuth.mockReturnValue([{ user: null, token: "" }, jest.fn()]);
+    useCart.mockReturnValue([[]]);
+
+    render(
+      <MemoryRouter>
+        <Header />
+      </MemoryRouter>
+    );
+
+    // Assert
+    expect(screen.getByText(/Virtual Vault/i)).toBeInTheDocument();
+  });
+
+  test("renders navigation links", () => {
+    // Arrange unauthenticated state and empty cart
+    useAuth.mockReturnValue([{ user: null, token: "" }, jest.fn()]);
+    useCart.mockReturnValue([[]]);
+
+    render(
+      <MemoryRouter>
+        <Header />
+      </MemoryRouter>
+    );
+
+    // Assert
+    expect(screen.getByRole("link", { name: /home/i })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: /^categories$/i })).toHaveAttribute("href", "/categories");
     expect(screen.getByRole("link", { name: /cart/i })).toHaveAttribute("href", "/cart");
   });
 
-  test("renders user name and dashboard/logout when authenticated (admin)", () => {
+  test("renders authentication links when unauthenticated", () => {
+    // Arrange unauthenticated state and empty cart
+    useAuth.mockReturnValue([{ user: null, token: "" }, jest.fn()]);
+    useCart.mockReturnValue([[]]);
+
+    render(
+      <MemoryRouter>
+        <Header />
+      </MemoryRouter>
+    );
+
+    // Assert
+    expect(screen.getByRole("link", { name: /login/i })).toHaveAttribute("href", "/login");
+    expect(screen.getByRole("link", { name: /register/i })).toHaveAttribute("href", "/register");
+  });
+
+  test("does not render authenticated elements when unauthenticated", () => {
+    // Arrange unauthenticated state and empty cart
+    useAuth.mockReturnValue([{ user: null, token: "" }, jest.fn()]);
+    useCart.mockReturnValue([[]]);
+
+    render(
+      <MemoryRouter>
+        <Header />
+      </MemoryRouter>
+    );
+
+    // Assert
+    expect(screen.queryByRole("link", { name: /dashboard/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /logout/i })).not.toBeInTheDocument();
+  });
+
+  test("renders user name when authenticated", () => {
     // Arrange authenticated admin and cart with items
     useAuth.mockReturnValue([{ user: { name: "Alice", role: 1 }, token: "t" }, jest.fn()]);
     useCart.mockReturnValue([[1, 2, 3]]);
@@ -74,17 +127,115 @@ describe("Header", () => {
       </MemoryRouter>
     );
 
-    // User name shown
+    // Assert
     expect(screen.getByText(/Alice/i)).toBeInTheDocument();
+  });
 
-    // Dashboard link targets admin dashboard
+  test("renders dashboard and logout links when authenticated", () => {
+    // Arrange authenticated admin and cart with items
+    useAuth.mockReturnValue([{ user: { name: "Alice", role: 1 }, token: "t" }, jest.fn()]);
+    useCart.mockReturnValue([[1, 2, 3]]);
+
+    render(
+      <MemoryRouter>
+        <Header />
+      </MemoryRouter>
+    );
+
+    // Assert
     expect(screen.getByRole("link", { name: /dashboard/i })).toHaveAttribute("href", "/dashboard/admin");
-
-    // Logout link points to login route
     expect(screen.getByRole("link", { name: /logout/i })).toHaveAttribute("href", "/login");
+  });
 
-    // Cart link still present
-    expect(screen.getByRole("link", { name: /cart/i })).toHaveAttribute("href", "/cart");
+  test("does not render authentication links when authenticated", () => {
+    // Arrange authenticated admin and cart with items
+    useAuth.mockReturnValue([{ user: { name: "Alice", role: 1 }, token: "t" }, jest.fn()]);
+    useCart.mockReturnValue([[1, 2, 3]]);
+
+    render(
+      <MemoryRouter>
+        <Header />
+      </MemoryRouter>
+    );
+
+    // Assert
+    expect(screen.queryByRole("link", { name: /login/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /register/i })).not.toBeInTheDocument();
+  });
+
+  test("displays correct cart badge count", () => {
+    // Arrange - mock cart with 3 items
+    const mockCart = [1, 2, 3];
+    useAuth.mockReturnValue([{ user: null, token: "" }, jest.fn()]);
+    useCart.mockReturnValue([mockCart]);
+
+    render(
+      <MemoryRouter>
+        <Header />
+      </MemoryRouter>
+    );
+
+    // Act
+    const cartBadge = screen.getByTitle("3"); // Badge shows count as title
+
+    // Assert
+    expect(cartBadge).toBeInTheDocument();
+    expect(cartBadge).toHaveTextContent("3");
+  });
+
+  test("displays zero cart badge count when cart is empty", () => {
+    // Arrange - mock empty cart
+    const mockCart = [];
+    useAuth.mockReturnValue([{ user: null, token: "" }, jest.fn()]);
+    useCart.mockReturnValue([mockCart]);
+
+    render(
+      <MemoryRouter>
+        <Header />
+      </MemoryRouter>
+    );
+
+    // Act
+    const cartBadge = screen.getByTitle("0"); // Badge shows count as title
+
+    // Assert
+    expect(cartBadge).toBeInTheDocument();
+    expect(cartBadge).toHaveTextContent("0");
+  });
+
+  test("calls handleLogout when logout link is clicked", () => {
+    // Arrange - mock authenticated user and setAuth function
+    const mockSetAuth = jest.fn();
+    useAuth.mockReturnValue([{ user: { name: "Alice", role: 1 }, token: "t" }, mockSetAuth]);
+    useCart.mockReturnValue([[]]);
+
+    // Mock localStorage
+    const localStorageMock = {
+      removeItem: jest.fn(),
+    };
+    Object.defineProperty(window, 'localStorage', {
+      value: localStorageMock,
+    });
+
+    render(
+      <MemoryRouter>
+        <Header />
+      </MemoryRouter>
+    );
+
+    // Act - click the logout link
+    const logoutLink = screen.getByRole("link", { name: /logout/i });
+    
+    act(() => {
+      logoutLink.click();
+    });
+
+    // Assert - verify setAuth was called with logout state
+    expect(mockSetAuth).toHaveBeenCalledWith({
+      user: null,
+      token: "",
+    });
+    expect(localStorageMock.removeItem).toHaveBeenCalledWith("auth");
   });
 });
 

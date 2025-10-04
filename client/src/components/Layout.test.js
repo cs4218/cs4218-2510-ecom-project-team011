@@ -8,34 +8,108 @@ jest.mock("./Header", () => () => <div data-testid="header" />);
 jest.mock("./Footer", () => () => <div data-testid="footer" />);
 
 describe("Layout", () => {
-  test("renders Helmet tags, Header, Footer, Toaster and children", async () => {
+  test("renders document title from props", async () => {
+    // Arrange
     render(
-      <Layout title="Custom Title" description="Desc" keywords="k1,k2" author="Author A">
+      <Layout title="Custom Title">
         <div>Child Content</div>
       </Layout>
     );
 
-    // Helmet title updates asynchronously
+    // Act & Assert
     await waitFor(() => expect(document.title).toBe("Custom Title"));
+  });
 
-    // Helmet meta tags
+  test("renders meta description from props", async () => {
+    // Arrange
+    render(
+      <Layout description="Custom Desc">
+        <div>Child Content</div>
+      </Layout>
+    );
+
+    // Act & Assert
     await waitFor(() => {
       const metaDescription = document.querySelector('meta[name="description"]');
-      const metaKeywords = document.querySelector('meta[name="keywords"]');
-      const metaAuthor = document.querySelector('meta[name="author"]');
-      expect(metaDescription).toHaveAttribute("content", "Desc");
-      expect(metaKeywords).toHaveAttribute("content", "k1,k2");
-      expect(metaAuthor).toHaveAttribute("content", "Author A");
+      expect(metaDescription).toHaveAttribute("content", "Custom Desc");
     });
+  });
 
-    // Header and Footer rendered
+  test("renders meta keywords from props", async () => {
+    // Arrange
+    render(
+      <Layout keywords="key1,key2">
+        <div>Child Content</div>
+      </Layout>
+    );
+
+    // Act & Assert
+    await waitFor(() => {
+      const metaKeywords = document.querySelector('meta[name="keywords"]');
+      expect(metaKeywords).toHaveAttribute("content", "key1,key2");
+    });
+  });
+
+  test("renders meta author from props", async () => {
+    // Arrange
+    render(
+      <Layout author="Custom Author">
+        <div>Child Content</div>
+      </Layout>
+    );
+
+    // Act & Assert
+    await waitFor(() => {
+      const metaAuthor = document.querySelector('meta[name="author"]');
+      expect(metaAuthor).toHaveAttribute("content", "Custom Author");
+    });
+  });
+
+  test("renders Header component", () => {
+    // Arrange
+    render(
+      <Layout>
+        <div>Child Content</div>
+      </Layout>
+    );
+
+    // Act & Assert
     expect(screen.getByTestId("header")).toBeInTheDocument();
+  });
+
+  test("renders Footer component", () => {
+    // Arrange
+    render(
+      <Layout>
+        <div>Child Content</div>
+      </Layout>
+    );
+
+    // Act & Assert
     expect(screen.getByTestId("footer")).toBeInTheDocument();
+  });
 
-    // Main wrapper present (Toaster renders within main via portal; skip strict container check)
+  test("renders main wrapper element", () => {
+    // Arrange
+    render(
+      <Layout>
+        <div>Child Content</div>
+      </Layout>
+    );
+
+    // Act & Assert
     expect(screen.getByRole('main')).toBeInTheDocument();
+  });
 
-    // Children rendered
+  test("renders children content", () => {
+    // Arrange
+    render(
+      <Layout>
+        <div>Child Content</div>
+      </Layout>
+    );
+
+    // Act & Assert
     expect(screen.getByText("Child Content")).toBeInTheDocument();
   });
 

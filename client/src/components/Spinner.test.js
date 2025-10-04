@@ -4,7 +4,7 @@ import { MemoryRouter, Routes, Route } from "react-router-dom";
 import "@testing-library/jest-dom";
 import Spinner from "./Spinner";
 
-function renderWithRouter(ui, { initialEntries = ["/"], routes = [] } = {}) {
+function mockRender(ui, { initialEntries = ["/"], routes = [] } = {}) {
   return render(
     <MemoryRouter initialEntries={initialEntries}>
       <Routes>
@@ -31,32 +31,71 @@ describe("Spinner", () => {
     jest.useRealTimers();
   });
 
-  test("shows countdown text and spinner role", () => {
-    renderWithRouter(<Spinner />);
+  test("shows countdown text", () => {
+    // Arrange
+    mockRender(<Spinner />);
+
+    // Act & Assert
     expect(
       screen.getByText(/redirecting to you in/i)
     ).toBeInTheDocument();
+  });
+
+  test("shows loading spinner", () => {
+    // Arrange
+    mockRender(<Spinner />);
+
+    // Act & Assert
     expect(screen.getByRole("status")).toBeInTheDocument();
   });
 
-  test("navigates to default login path after countdown", () => {
-    renderWithRouter(<Spinner />);
+  test("countdown decreases over time", () => {
+    // Arrange
+    mockRender(<Spinner />);
 
-    // advance 3 seconds to trigger navigate
+    // Act & Assert - Initial countdown should show 3
+    expect(screen.getByText(/redirecting to you in 3 second/i)).toBeInTheDocument();
+
+    // Act - Advance timer by 1 second
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    // Assert - Countdown should show 2
+    expect(screen.getByText(/redirecting to you in 2 second/i)).toBeInTheDocument();
+
+    // Act - Advance timer by another second
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    // Assert - Countdown should show 1
+    expect(screen.getByText(/redirecting to you in 1 second/i)).toBeInTheDocument();
+  });
+
+  test("navigates to default login path after countdown", () => {
+    // Arrange
+    mockRender(<Spinner />);
+
+    // Act
     act(() => {
       jest.advanceTimersByTime(3000);
     });
 
+    // Assert
     expect(screen.getByText("Login Page")).toBeInTheDocument();
   });
 
   test("navigates to provided custom path after countdown", () => {
-    renderWithRouter(<Spinner path="dashboard" />);
+    // Arrange
+    mockRender(<Spinner path="dashboard" />);
 
+    // Act
     act(() => {
       jest.advanceTimersByTime(3000);
     });
 
+    // Assert
     expect(screen.getByText("Dashboard Page")).toBeInTheDocument();
   });
 });
