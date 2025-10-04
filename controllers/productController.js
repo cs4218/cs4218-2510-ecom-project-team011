@@ -389,14 +389,14 @@ export const relatedProductController = async (req, res) => {
 
     res.status(200).send({
       success: true,
-      message: "Related products retrieved successfully",
+      message: "Related products retrieved",
       products,
     });
   } catch (error) {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Error retrieving related products",
+      message: "Error retrieving products",
       error,
     });
   }
