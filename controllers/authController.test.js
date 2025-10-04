@@ -1,4 +1,7 @@
-process.env.JWT_SECRET = "test-secret";
+import React from 'react';
+import { render, screen, act } from '@testing-library/react';
+import { SearchProvider, useSearch } from './search';
+import '@testing-library/jest-dom/extend-expect';
 // Mocks 
 
 jest.mock("../models/userModel.js", () => {
