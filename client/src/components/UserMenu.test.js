@@ -1,7 +1,6 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
-import userEvent from "@testing-library/user-event";
 import UserMenu from "./UserMenu"; // adjust path
 import { act } from 'react-dom/test-utils';
 
@@ -53,7 +52,7 @@ describe("UserMenu", () => {
     // simulate click
     
     act(() => {
-      userEvent.click(screen.getByText("Profile"));
+      fireEvent.click(screen.getByText("Profile"));
     })
 
     // assert navigation
@@ -71,7 +70,7 @@ describe("UserMenu", () => {
     );
 
     act(() => {
-      userEvent.click(screen.getByText("Orders"));
+      fireEvent.click(screen.getByText("Orders"));
     })
 
     expect(await screen.findByText("Orders Page")).toBeInTheDocument();
