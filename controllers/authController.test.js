@@ -35,7 +35,7 @@ import {
   loginController,
   forgotPasswordController,
   testController,
-} from "authController.js"; 
+} from "./authController.js"; 
 
 const mockReqRes = (body = {}, extras = {}) => {
   const req = { body, params: {}, user: {}, ...extras };
