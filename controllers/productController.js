@@ -50,10 +50,15 @@ export const createProductController = async (req, res) => {
           success: false,
           message: "Product quantity is required",
         });
-      case photo && photo.size > 1000000:
+      case photo && photo.size >= 1000000:
         return res.status(400).send({
           success: false,
-          message: "Photo is required and should be less than 1MB",
+          message: "Photo should be less than 1MB",
+        });
+      case shipping === undefined:
+        return res.status(400).send({
+          success: false,
+          message: "Product shipping is required",
         });
     }
 
@@ -221,10 +226,15 @@ export const updateProductController = async (req, res) => {
           success: false,
           message: "Product quantity is required",
         });
-      case photo && photo.size > 1000000:
+      case photo && photo.size >= 1000000:
         return res.status(400).send({
           success: false,
           message: "Photo should be less than 1MB",
+        });
+      case shipping === undefined:
+        return res.status(400).send({
+          success: false,
+          message: "Product shipping is required",
         });
     }
 

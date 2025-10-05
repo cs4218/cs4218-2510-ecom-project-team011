@@ -102,200 +102,6 @@ describe("Product Controller Tests", () => {
   });
 
   // Leon
-  describe("createProductController", () => {
-    const validFields = {
-      name: "Test Product",
-      description: "Test Description",
-      price: 99.99,
-      category: "cat1",
-      quantity: 10,
-    };
-
-    test("should create product successfully", async () => {
-      const req = mockReq(validFields);
-      const res = mockRes();
-
-      // The controller creates a new product instance with the fields
-      const expectedProduct = {
-        ...validFields,
-        slug: "test-product",
-        _id: "1",
-        photo: { data: null, contentType: null },
-      };
-
-      mockProductSave.mockResolvedValue(expectedProduct);
-
-      await createProductController(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.send).toHaveBeenCalledWith({
-        success: true,
-        message: "Product created successfully",
-        product: expect.objectContaining({
-          name: "Test Product",
-          description: "Test Description",
-        }),
-      });
-      expect(mockProductSave).toHaveBeenCalled();
-    });
-
-    test("should create product with photo", async () => {
-      const files = {
-        photo: { path: "/fake/path", type: "image/jpeg", size: 500000 },
-      };
-      const req = mockReq(validFields, files);
-      const res = mockRes();
-
-      mockProductSave.mockResolvedValue({ _id: "1", ...validFields });
-
-      await createProductController(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(201);
-      expect(mockProductSave).toHaveBeenCalled();
-    });
-
-    // Test all validation errors with correct status codes and messages
-    const validationTests = [
-      { field: "name", message: "Product name is required" },
-      { field: "description", message: "Product description is required" },
-      { field: "price", message: "Product price is required" },
-      { field: "category", message: "Product category is required" },
-      { field: "quantity", message: "Product quantity is required" },
-    ];
-
-    validationTests.forEach(({ field, message }) => {
-      test(`should return 400 when ${field} is missing`, async () => {
-        const invalidFields = { ...validFields };
-        delete invalidFields[field];
-        const req = mockReq(invalidFields);
-        const res = mockRes();
-
-        await createProductController(req, res);
-
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.send).toHaveBeenCalledWith({
-          success: false,
-          message,
-        });
-      });
-    });
-
-    test("should return 400 when photo too large", async () => {
-      const files = { photo: { size: 2000000 } };
-      const req = mockReq(validFields, files);
-      const res = mockRes();
-
-      await createProductController(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.send).toHaveBeenCalledWith({
-        success: false,
-        message: "Photo is required and should be less than 1MB",
-      });
-    });
-
-    test("should handle database error", async () => {
-      const req = mockReq(validFields);
-      const res = mockRes();
-
-      mockProductSave.mockRejectedValue(new Error("Database error"));
-
-      await createProductController(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.send).toHaveBeenCalledWith({
-        success: false,
-        error: "Database error",
-        message: "Error creating product",
-      });
-    });
-  });
-
-  // Leon
-  describe("deleteProductController", () => {
-    test("should delete product successfully", async () => {
-      const req = mockReq({}, {}, { pid: "1" });
-      const res = mockRes();
-
-      MockProductModel.findByIdAndDelete.mockReturnValue({
-        select: jest.fn().mockResolvedValue({ _id: "1" }),
-      });
-
-      await deleteProductController(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.send).toHaveBeenCalledWith({
-        success: true,
-        message: "Product deleted successfully",
-      });
-    });
-
-    test("should return 404 when product not found", async () => {
-      const req = mockReq({}, {}, { pid: "999" });
-      const res = mockRes();
-
-      MockProductModel.findByIdAndDelete.mockReturnValue({
-        select: jest.fn().mockResolvedValue(null),
-      });
-
-      await deleteProductController(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.send).toHaveBeenCalledWith({
-        success: false,
-        message: "Product not found",
-      });
-    });
-  });
-
-  // Leon
-  describe("updateProductController", () => {
-    const validFields = {
-      name: "Updated Product",
-      description: "Updated Description",
-      price: 149.99,
-      category: "cat1",
-      quantity: 5,
-    };
-
-    test("should update product successfully", async () => {
-      const req = mockReq(validFields, {}, { pid: "1" });
-      const res = mockRes();
-      const mockProduct = {
-        _id: "1",
-        ...validFields,
-        save: jest.fn().mockResolvedValue(),
-      };
-
-      mockProductFindByIdAndUpdate.mockResolvedValue(mockProduct);
-
-      await updateProductController(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.send).toHaveBeenCalledWith({
-        success: true,
-        message: "Product updated successfully",
-        product: mockProduct,
-      });
-    });
-
-    test("should return 404 when product not found", async () => {
-      const req = mockReq(validFields, {}, { pid: "999" });
-      const res = mockRes();
-
-      mockProductFindByIdAndUpdate.mockResolvedValue(null);
-
-      await updateProductController(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.send).toHaveBeenCalledWith({
-        success: false,
-        message: "Product not found",
-      });
-    });
-  });
-
-  // Leon
   describe("braintreeTokenController", () => {
     test("should generate token successfully", async () => {
       const req = mockReq();
@@ -1314,6 +1120,1032 @@ describe("Product Controller Tests", () => {
         success: false,
         error,
         message: "Error retrieving products",
+      });
+    });
+  });
+
+  // You Wei
+  describe("createProductController tests", () => {
+    describe("Decision table tests", () => {
+      test("Create product with missing name", async () => {
+        // Arrange (name missing; others don't care)
+        const req = mockReq(
+          {
+            // name: undefined
+            description: "X",
+            price: 1,
+            category: "X",
+            quantity: 1,
+            shipping: false,
+          },
+          {}
+        );
+        const res = mockRes();
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          message: "Product name is required",
+        });
+      });
+
+      test("Create product with name, but missing description", async () => {
+        // Arrange (description missing; others don't care)
+        const req = mockReq(
+          {
+            name: "Some Product",
+            // description: undefined
+            price: 1,
+            category: "X",
+            quantity: 1,
+            shipping: false,
+          },
+          {}
+        );
+        const res = mockRes();
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          message: "Product description is required",
+        });
+      });
+
+      test("Create product with name, description, but missing price", async () => {
+        // Arrange (name, description present; price missing; others don't care)
+        const req = mockReq(
+          {
+            name: "Some Product",
+            description: "Some description",
+            // price: undefined
+            category: "X",
+            quantity: 1,
+            shipping: false,
+          },
+          {}
+        );
+        const res = mockRes();
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          message: "Product price is required",
+        });
+      });
+
+      test("Create product with name, description, price but missing category", async () => {
+        // Arrange (name, description, price present; category missing; others don't care)
+        const req = mockReq(
+          {
+            name: "Some Product",
+            description: "Some description",
+            price: 123,
+            // category: undefined
+            quantity: 1,
+            shipping: false,
+          },
+          {}
+        );
+        const res = mockRes();
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          message: "Product category is required",
+        });
+      });
+
+      test("Create product with name, description, price, category but missing quantity", async () => {
+        // Arrange (name, description, price, category present; quantity missing; others don't care)
+        const req = mockReq(
+          {
+            name: "Some Product",
+            description: "Some description",
+            price: 123,
+            category: "Some Category",
+            // quantity: undefined
+            shipping: false,
+          },
+          {}
+        );
+        const res = mockRes();
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          message: "Product quantity is required",
+        });
+      });
+
+      test("Create product where photo does not exist", async () => {
+        // Arrange (all required fields present; no photo provided)
+        const req = mockReq(
+          {
+            name: "Phone X",
+            description: "Flagship device",
+            price: 999,
+            category: "Mobiles",
+            quantity: 5,
+            shipping: false,
+          },
+          {/*photo: undefined */}
+        );
+        const res = mockRes();
+
+        mockProductSave.mockResolvedValueOnce(undefined);
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(201);
+        expect(res.send).toHaveBeenCalledWith(
+          expect.objectContaining({ success: true, message: "Product created successfully" })
+        );
+      });
+
+      test("Create product with photo size > 1MB", async () => {
+        // Arrange (all required fields present; photo too large)
+        const req = mockReq(
+          {
+            name: "Phone Y",
+            description: "Great camera",
+            price: 1099,
+            category: "Mobiles",
+            quantity: 8,
+            shipping: true,
+          },
+          { photo: { path: "/tmp/large", type: "image/jpeg", size: 1000001 } }
+        );
+        const res = mockRes();
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          message: "Photo should be less than 1MB",
+        });
+      });
+
+      test("Create product with shipping undefined", async () => {
+        // Arrange (all required fields present; shipping missing)
+        const req = mockReq(
+          {
+            name: "Phone Z",
+            description: "Battery beast",
+            price: 799,
+            category: "Mobiles",
+            quantity: 3,
+            // shipping: undefined
+          },
+          {}
+        );
+        const res = mockRes();
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          message: "Product shipping is required",
+        });
+      });
+
+      test("Create product with all fields and photo", async () => {
+        // Arrange (all required fields present; photo < 1MB)
+        const req = mockReq(
+          {
+            name: "Phone Pro",
+            description: "Premium device",
+            price: 1299,
+            category: "Mobiles",
+            quantity: 10,
+            shipping: true,
+          },
+          { photo: { path: "/tmp/p", type: "image/png", size: 999999 } }
+        );
+        const res = mockRes();
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(201);
+        expect(res.send).toHaveBeenCalledWith(
+          expect.objectContaining({ success: true, message: "Product created successfully" })
+        );
+      });
+    });
+
+    describe("BVA tests", () => {
+      test("Create product with all fields and photo < 1MB", async () => {
+        // Arrange (all required fields present; photo < 1MB)
+        const req = mockReq(
+          {
+            name: "Phone Pro",
+            description: "Premium device",
+            price: 1299,
+            category: "Mobiles",
+            quantity: 10,
+            shipping: true,
+          },
+          { photo: { path: "/tmp/p", type: "image/png", size: 999999 } }
+        );
+        const res = mockRes();
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(201);
+        expect(res.send).toHaveBeenCalledWith(
+          expect.objectContaining({ success: true, message: "Product created successfully" })
+        );
+      });
+
+      test("Create product with all fields and photo = 1MB", async () => {
+        // Arrange (all required fields present; photo = 1MB)
+        const req = mockReq(
+          {
+            name: "Phone Pro",
+            description: "Premium device",
+            price: 1299,
+            category: "Mobiles",
+            quantity: 10,
+            shipping: true,
+          },
+          { photo: { path: "/tmp/p", type: "image/png", size: 1000000 } }
+        );
+        const res = mockRes();
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith(
+          expect.objectContaining({ success: false, message: "Photo should be less than 1MB" })
+        );
+      });
+
+      test("Create product with all fields and photo > 1MB", async () => {
+        // Arrange (all required fields present; photo > 1MB)
+        const req = mockReq(
+          {
+            name: "Phone Pro",
+            description: "Premium device",
+            price: 1299,
+            category: "Mobiles",
+            quantity: 10,
+            shipping: true,
+          },
+          { photo: { path: "/tmp/p", type: "image/png", size: 1000001 } }
+        );
+        const res = mockRes();
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith(
+          expect.objectContaining({ success: false, message: "Photo should be less than 1MB" })
+        );
+      });
+
+      test("Create product with all fields and photo = 0MB", async () => {
+        // Arrange (all required fields present; photo = 0MB)
+        const req = mockReq(
+          {
+            name: "Phone Pro",
+            description: "Premium device",
+            price: 1299,
+            category: "Mobiles",
+            quantity: 10,
+            shipping: true,
+          },
+          { photo: { path: "/tmp/p", type: "image/png", size: 0 } }
+        );
+        const res = mockRes();
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(201);
+        expect(res.send).toHaveBeenCalledWith(
+          expect.objectContaining({ success: true, message: "Product created successfully" })
+        );
+      });
+
+      test("Create product with all fields and photo = 1 byte", async () => {
+        // Arrange (all required fields present; photo = 1 byte)
+        const req = mockReq(
+          {
+            name: "Phone Pro",
+            description: "Premium device",
+            price: 1299,
+            category: "Mobiles",
+            quantity: 10,
+            shipping: true,
+          },
+          { photo: { path: "/tmp/p", type: "image/png", size: 1 } }
+        );
+        const res = mockRes();
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(201);
+        expect(res.send).toHaveBeenCalledWith(
+          expect.objectContaining({ success: true, message: "Product created successfully" })
+        );
+      });
+    });
+
+    describe("Equivalence class tests for photo existence", () => {
+      test("Create product with all fields and no photo", async () => {
+        // Arrange (all required fields present; no photo provided)
+        const req = mockReq(
+          {
+            name: "Phone Pro",
+            description: "Premium device",
+            price: 1299,
+            category: "Mobiles",
+            quantity: 10,
+            shipping: true,
+          },
+          {}
+        );
+        const res = mockRes();
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        const fs = require("fs");
+        expect(fs.readFileSync).not.toHaveBeenCalled();
+      });
+
+      test("Create product with all fields and photo", async () => {
+        // Arrange (all required fields present; photo provided)
+        const req = mockReq(
+          {
+            name: "Phone Pro",
+            description: "Premium device",
+            price: 1299,
+            category: "Mobiles",
+            quantity: 10,
+            shipping: true,
+          },
+          { photo: { path: "/tmp/p", type: "image/png", size: 999999 } }
+        );
+        const res = mockRes();
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        const fs = require("fs");
+        expect(fs.readFileSync).toHaveBeenCalledWith("/tmp/p");
+      });
+    });
+
+    describe("Error handling tests", () => {
+      test("FS read failure should return 500", async () => {
+        // Arrange: valid inputs with photo, but fs.readFileSync throws
+        const req = mockReq(
+          {
+            name: "Err Product",
+            description: "Cause fs error",
+            price: 10,
+            category: "Mobiles",
+            quantity: 1,
+            shipping: true,
+          },
+          { photo: { path: "/tmp/bad", type: "image/png", size: 100 } }
+        );
+        const res = mockRes();
+        const fs = require("fs");
+        fs.readFileSync.mockImplementationOnce(() => {
+          throw new Error("FS fail");
+        });
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          error: "FS fail",
+          message: "Error creating product",
+        });
+      });
+
+      test("DB save failure should return 500", async () => {
+        // Arrange: valid inputs (no photo required), product save rejects
+        const req = mockReq(
+          {
+            name: "Err Product",
+            description: "Cause db error",
+            price: 20,
+            category: "Mobiles",
+            quantity: 2,
+            shipping: true,
+          },
+          {}
+        );
+        const res = mockRes();
+        mockProductSave.mockRejectedValueOnce(new Error("DB fail"));
+
+        // Act
+        await createProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          error: "DB fail",
+          message: "Error creating product",
+        });
+      });
+    });
+  });
+
+  // You Wei
+  describe("updateProductController tests", () => {
+    describe("Decision table tests", () => {
+      test("Update product with missing name", async () => {
+        // Arrange
+        const req = mockReq(
+          {
+            // name: undefined
+            description: "X",
+            price: 1,
+            category: "X",
+            quantity: 1,
+            shipping: true,
+          },
+          {},
+          { pid: "p1" }
+        );
+        const res = mockRes();
+
+        // Act
+        await updateProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          message: "Product name is required",
+        });
+      });
+
+      test("Update product with name but missing description", async () => {
+        // Arrange
+        const req = mockReq(
+          {
+            name: "Some Product",
+            // description: undefined
+            price: 1,
+            category: "X",
+            quantity: 1,
+            shipping: true,
+          },
+          {},
+          { pid: "p1" }
+        );
+        const res = mockRes();
+
+        // Act
+        await updateProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          message: "Product description is required",
+        });
+      });
+
+      test("Update product with missing price", async () => {
+        const req = mockReq(
+          {
+            name: "Some Product",
+            description: "D",
+            // price: undefined
+            category: "X",
+            quantity: 1,
+            shipping: true,
+          },
+          {},
+          { pid: "p1" }
+        );
+        const res = mockRes();
+        await updateProductController(req, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          message: "Product price is required",
+        });
+      });
+
+      test("Update product with missing category", async () => {
+        const req = mockReq(
+          {
+            name: "Some Product",
+            description: "D",
+            price: 2,
+            // category: undefined
+            quantity: 1,
+            shipping: true,
+          },
+          {},
+          { pid: "p1" }
+        );
+        const res = mockRes();
+        await updateProductController(req, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          message: "Product category is required",
+        });
+      });
+
+      test("Update product with missing quantity", async () => {
+        const req = mockReq(
+          {
+            name: "Some Product",
+            description: "D",
+            price: 2,
+            category: "X",
+            // quantity: undefined
+            shipping: true,
+          },
+          {},
+          { pid: "p1" }
+        );
+        const res = mockRes();
+        await updateProductController(req, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          message: "Product quantity is required",
+        });
+      });
+
+      test("Update product with photo >= 1MB", async () => {
+        const req = mockReq(
+          {
+            name: "Some Product",
+            description: "D",
+            price: 2,
+            category: "X",
+            quantity: 1,
+            shipping: true,
+          },
+          { photo: { path: "/tmp/p", type: "image/png", size: 1000000 } },
+          { pid: "p1" }
+        );
+        const res = mockRes();
+        await updateProductController(req, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          message: "Photo should be less than 1MB",
+        });
+      });
+
+      test("Update product with shipping undefined", async () => {
+        const req = mockReq(
+          {
+            name: "Some Product",
+            description: "D",
+            price: 2,
+            category: "X",
+            quantity: 1,
+            // shipping: undefined
+          },
+          {},
+          { pid: "p1" }
+        );
+        const res = mockRes();
+        await updateProductController(req, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          message: "Product shipping is required",
+        });
+      });
+
+      test("Update product with no photo (valid)", async () => {
+        // Arrange: all fields present, no photo provided
+        const req = mockReq(
+          {
+            name: "Updated Product",
+            description: "New",
+            price: 10,
+            category: "Mobiles",
+            quantity: 2,
+            shipping: true,
+          },
+          {},
+          { pid: "pid-nophoto" }
+        );
+        const res = mockRes();
+
+        //cuz its a success case need to let product be findable
+        const updatedDoc = { photo: {}, save: jest.fn().mockResolvedValue(undefined) };
+        mockProductFindByIdAndUpdate.mockResolvedValueOnce(updatedDoc);
+
+        // Act
+        await updateProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.send).toHaveBeenCalledWith(
+          expect.objectContaining({ success: true, message: "Product updated successfully" })
+        );
+      });
+    });
+
+    describe("BVA tests", () => {
+      test("Update with photo < 1MB", async () => {
+        const req = mockReq(
+          {
+            name: "Updated Product",
+            description: "New",
+            price: 10,
+            category: "Mobiles",
+            quantity: 2,
+            shipping: true,
+          },
+          { photo: { path: "/tmp/p", type: "image/png", size: 999999 } },
+          { pid: "pid-200" }
+        );
+        const res = mockRes();
+        const updatedDoc = { photo: {}, save: jest.fn().mockResolvedValue(undefined) };
+        mockProductFindByIdAndUpdate.mockResolvedValueOnce(updatedDoc);
+
+        await updateProductController(req, res);
+
+        const fs = require("fs");
+        expect(fs.readFileSync).toHaveBeenCalledWith("/tmp/p");
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.send).toHaveBeenCalledWith(
+          expect.objectContaining({ success: true, message: "Product updated successfully" })
+        );
+      });
+
+      test("Update with photo = 1MB (invalid)", async () => {
+        const req = mockReq(
+          {
+            name: "Updated Product",
+            description: "New",
+            price: 10,
+            category: "Mobiles",
+            quantity: 2,
+            shipping: true,
+          },
+          { photo: { path: "/tmp/p", type: "image/png", size: 1000000 } },
+          { pid: "pid-400-1" }
+        );
+        const res = mockRes();
+
+        await updateProductController(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          message: "Photo should be less than 1MB",
+        });
+      });
+
+      test("Update with photo > 1MB (invalid)", async () => {
+        const req = mockReq(
+          {
+            name: "Updated Product",
+            description: "New",
+            price: 10,
+            category: "Mobiles",
+            quantity: 2,
+            shipping: true,
+          },
+          { photo: { path: "/tmp/p", type: "image/png", size: 1000001 } },
+          { pid: "pid-400-2" }
+        );
+        const res = mockRes();
+
+        await updateProductController(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          message: "Photo should be less than 1MB",
+        });
+      });
+
+      test("Update with photo = 0 bytes", async () => {
+        const req = mockReq(
+          {
+            name: "Updated Product",
+            description: "New",
+            price: 10,
+            category: "Mobiles",
+            quantity: 2,
+            shipping: true,
+          },
+          { photo: { path: "/tmp/p", type: "image/png", size: 0 } },
+          { pid: "pid-0" }
+        );
+        const res = mockRes();
+        const updatedDoc = { photo: {}, save: jest.fn().mockResolvedValue(undefined) };
+        mockProductFindByIdAndUpdate.mockResolvedValueOnce(updatedDoc);
+
+        await updateProductController(req, res);
+
+        const fs = require("fs");
+        expect(fs.readFileSync).toHaveBeenCalledWith("/tmp/p");
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.send).toHaveBeenCalledWith(
+          expect.objectContaining({ success: true, message: "Product updated successfully" })
+        );
+      });
+
+      test("Update with photo = 1 byte", async () => {
+        const req = mockReq(
+          {
+            name: "Updated Product",
+            description: "New",
+            price: 10,
+            category: "Mobiles",
+            quantity: 2,
+            shipping: true,
+          },
+          { photo: { path: "/tmp/p", type: "image/png", size: 1 } },
+          { pid: "pid-1" }
+        );
+        const res = mockRes();
+        const updatedDoc = { photo: {}, save: jest.fn().mockResolvedValue(undefined) };
+        mockProductFindByIdAndUpdate.mockResolvedValueOnce(updatedDoc);
+
+        await updateProductController(req, res);
+
+        const fs = require("fs");
+        expect(fs.readFileSync).toHaveBeenCalledWith("/tmp/p");
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.send).toHaveBeenCalledWith(
+          expect.objectContaining({ success: true, message: "Product updated successfully" })
+        );
+      });
+    });
+
+    describe("Equivalence partition tests for if branches", () => {
+      test("Update with photo", async () => {
+        // Arrange
+        const req = mockReq(
+          {
+            name: "Eq Product",
+            description: "Eq desc",
+            price: 11,
+            category: "Mobiles",
+            quantity: 2,
+            shipping: true,
+          },
+          { photo: { path: "/tmp/eq.png", type: "image/png", size: 999999 } },
+          { pid: "pid-eq-photo" }
+        );
+        const res = mockRes();
+        const updatedDoc = { photo: {}, save: jest.fn().mockResolvedValue(undefined) };
+        mockProductFindByIdAndUpdate.mockResolvedValueOnce(updatedDoc);
+
+        // Act
+        await updateProductController(req, res);
+
+        // Assert
+        const fs = require("fs");
+        expect(fs.readFileSync).toHaveBeenCalledWith("/tmp/eq.png");
+      });
+
+      test("Update with no photo", async () => {
+        // Arrange
+        const req = mockReq(
+          {
+            name: "Eq Product",
+            description: "Eq desc",
+            price: 11,
+            category: "Mobiles",
+            quantity: 2,
+            shipping: true,
+          },
+          {},
+          { pid: "pid-eq-nophoto" }
+        );
+        const res = mockRes();
+        const updatedDoc = { photo: {}, save: jest.fn().mockResolvedValue(undefined) };
+        mockProductFindByIdAndUpdate.mockResolvedValueOnce(updatedDoc);
+
+        // Act
+        await updateProductController(req, res);
+
+        // Assert
+        const fs = require("fs");
+        expect(fs.readFileSync).not.toHaveBeenCalled();
+      });
+
+      test("Product not found", async () => {
+        // Arrange
+        const req = mockReq(
+          {
+            name: "Eq Product",
+            description: "Eq desc",
+            price: 11,
+            category: "Mobiles",
+            quantity: 2,
+            shipping: true,
+          },
+          {},
+          { pid: "pid-missing" }
+        );
+        const res = mockRes();
+        mockProductFindByIdAndUpdate.mockResolvedValueOnce(null);
+
+        // Act
+        await updateProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(404);
+        expect(res.send).toHaveBeenCalledWith({ success: false, message: "Product not found" });
+      });
+
+      test("Product found", async () => {
+        // Arrange
+        const req = mockReq(
+          {
+            name: "Eq Product",
+            description: "Eq desc",
+            price: 11,
+            category: "Mobiles",
+            quantity: 2,
+            shipping: true,
+          },
+          {},
+          { pid: "pid-found" }
+        );
+        const res = mockRes();
+        const updatedDoc = { photo: {}, save: jest.fn().mockResolvedValue(undefined) };
+        mockProductFindByIdAndUpdate.mockResolvedValueOnce(updatedDoc);
+
+        // Act
+        await updateProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(200);
+      });
+    });
+
+    describe("Error handling tests", () => {
+      test("FS read failure during update should return 500", async () => {
+        const req = mockReq(
+          {
+            name: "Updated Product",
+            description: "New",
+            price: 10,
+            category: "Mobiles",
+            quantity: 2,
+            shipping: true,
+          },
+          { photo: { path: "/tmp/bad", type: "image/png", size: 100 } },
+          { pid: "pid-123" }
+        );
+        const res = mockRes();
+        const updatedDoc = { photo: {}, save: jest.fn() };
+        mockProductFindByIdAndUpdate.mockResolvedValueOnce(updatedDoc);
+        const fs = require("fs");
+        fs.readFileSync.mockImplementationOnce(() => { throw new Error("FS fail"); });
+
+        await updateProductController(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          error: "FS fail",
+          message: "Error updating product",
+        });
+      });
+
+      test("DB save failure during update should return 500", async () => {
+        const req = mockReq(
+          {
+            name: "Updated Product",
+            description: "New",
+            price: 10,
+            category: "Mobiles",
+            quantity: 2,
+            shipping: true,
+          },
+          {},
+          { pid: "pid-123" }
+        );
+        const res = mockRes();
+        const updatedDoc = { photo: {}, save: jest.fn().mockRejectedValueOnce(new Error("DB fail")) };
+        mockProductFindByIdAndUpdate.mockResolvedValueOnce(updatedDoc);
+
+        await updateProductController(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          error: "DB fail",
+          message: "Error updating product",
+        });
+      });
+    });
+  });
+
+  // You Wei
+  describe("deleteProductController tests", () => {
+    describe("Equivalence partition tests", () => {
+      test("Product found", async () => {
+        // Arrange
+        const req = mockReq({}, {}, { pid: "del-1" });
+        const res = mockRes();
+        const select = jest.fn().mockResolvedValue({ _id: "del-1" });
+        MockProductModel.findByIdAndDelete.mockReturnValueOnce({ select });
+
+        // Act
+        await deleteProductController(req, res);
+
+        // Assert
+        expect(MockProductModel.findByIdAndDelete).toHaveBeenCalledWith("del-1");
+        expect(select).toHaveBeenCalledWith("-photo");
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.send).toHaveBeenCalledWith({ success: true, message: "Product deleted successfully" });
+      });
+
+      test("Product not found", async () => {
+        // Arrange
+        const req = mockReq({}, {}, { pid: "del-missing" });
+        const res = mockRes();
+        const select = jest.fn().mockResolvedValue(null);
+        MockProductModel.findByIdAndDelete.mockReturnValueOnce({ select });
+
+        // Act
+        await deleteProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(404);
+        expect(res.send).toHaveBeenCalledWith({ success: false, message: "Product not found" });
+      });
+    });
+
+    describe("Error handling tests", () => {
+      test("DB failure during delete should return 500", async () => {
+        // Arrange
+        const req = mockReq({}, {}, { pid: "del-err" });
+        const res = mockRes();
+        const error = new Error("DB fail");
+        const select = jest.fn().mockRejectedValue(error);
+        MockProductModel.findByIdAndDelete.mockReturnValueOnce({ select });
+
+        // Act
+        await deleteProductController(req, res);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.send).toHaveBeenCalledWith({
+          success: false,
+          error: "DB fail",
+          message: "Error deleting product",
+        });
       });
     });
   });
