@@ -1,6 +1,5 @@
-process.env.JWT_SECRET = "test-secret";
+process.env.JWT_SECRET = 'test-secret';
 // Mocks 
-
 jest.mock("../models/userModel.js", () => {
   const mockModel = jest.fn(); // constructor
   mockModel.findOne = jest.fn();

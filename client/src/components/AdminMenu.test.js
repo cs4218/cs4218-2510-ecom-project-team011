@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import "@testing-library/jest-dom";
 import userEvent from "@testing-library/user-event";
-import AdminMenu from "AdminMenu.js";
+import AdminMenu from "./AdminMenu";
 
 describe("AdminMenu", () => {
   test("renders heading and all links with correct routes", async () => {
@@ -26,25 +26,6 @@ describe("AdminMenu", () => {
     expect(createProduct).toHaveAttribute("href", "/dashboard/admin/create-product");
     expect(products).toHaveAttribute("href", "/dashboard/admin/products");
     expect(orders).toHaveAttribute("href", "/dashboard/admin/orders");
-  });
-
-  test("clicking a link is a client-side nav link", async () => {
-    // Arrange
-    const user = userEvent.setup();
-    render(
-      <MemoryRouter initialEntries={["/"]}>
-        <AdminMenu />
-      </MemoryRouter>
-    );
-
-    // Act
-    await user.click(screen.getByRole("link", { name: /products/i }));
-
-    // Assert
-    // With MemoryRouter we can't read the history directly here,
-    // but we can at least assert it's an anchor pointing at the route.
-    expect(screen.getByRole("link", { name: /products/i }))
-      .toHaveAttribute("href", "/dashboard/admin/products");
   });
 
   test("does not render Users link because it is commented out", () => {
