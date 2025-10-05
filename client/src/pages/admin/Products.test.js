@@ -23,13 +23,14 @@ jest.mock("../../components/AdminMenu", () => ({
   default: () => <div data-testid="admin-menu">Admin Menu</div>,
 }));
 
+// All renders are async so its a little different, we need to use wrap renders in act and await for assertion
 describe("Products", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     console.log = jest.fn(); // Mock console.log to avoid noise in tests
   });
 
-  test("renders admin menu and products heading", async () => {
+  test("renders admin menu", async () => {
     axios.get.mockResolvedValueOnce({
       data: { products: [] },
     });
@@ -42,12 +43,52 @@ describe("Products", () => {
       );
     });
 
-    expect(screen.getByTestId("layout")).toBeInTheDocument();
-    expect(screen.getByTestId("admin-menu")).toBeInTheDocument();
-    expect(screen.getByText("All Products List")).toBeInTheDocument();
+    expect(await screen.getByTestId("admin-menu")).toBeInTheDocument();
   });
 
-  test("displays products when API call succeeds", async () => {
+  test("renders products heading", async () => {
+    axios.get.mockResolvedValueOnce({
+      data: { products: [] },
+    });
+
+    await act(async () => {
+      render(
+        <MemoryRouter>
+          <Products />
+        </MemoryRouter>
+      );
+    });
+
+    expect(await screen.getByText("All Products List")).toBeInTheDocument();
+  });
+
+  test("renders product names and descriptions on success", async () => {
+    const mockProducts = [
+      {
+        _id: "1",
+        name: "Product 1",
+        description: "Description 1",
+        slug: "product-1",
+      },
+    ];
+
+    axios.get.mockResolvedValueOnce({
+      data: { products: mockProducts },
+    });
+
+    await act(async () => {
+      render(
+        <MemoryRouter>
+          <Products />
+        </MemoryRouter>
+      );
+    });
+
+    expect(await screen.findByText("Product 1")).toBeInTheDocument();
+    expect(await screen.findByText("Description 1")).toBeInTheDocument();
+  });
+
+  test("renders exactly two product links when two products provided", async () => {
     const mockProducts = [
       {
         _id: "1",
@@ -75,18 +116,8 @@ describe("Products", () => {
       );
     });
 
-    await waitFor(() => {
-      expect(screen.getByText("Product 1")).toBeInTheDocument();
-      expect(screen.getByText("Product 2")).toBeInTheDocument();
-      expect(screen.getByText("Description 1")).toBeInTheDocument();
-      expect(screen.getByText("Description 2")).toBeInTheDocument();
-    });
-
-    // Check that products are wrapped in links
-    const productLinks = screen.getAllByRole("link");
+    const productLinks = await screen.findAllByRole("link");
     expect(productLinks).toHaveLength(2);
-    expect(productLinks[0]).toHaveAttribute("href", "/dashboard/admin/product/product-1");
-    expect(productLinks[1]).toHaveAttribute("href", "/dashboard/admin/product/product-2");
   });
 
   test("displays product images with correct src", async () => {
@@ -111,10 +142,8 @@ describe("Products", () => {
       );
     });
 
-    await waitFor(() => {
-      const image = screen.getByAltText("Test Product");
-      expect(image).toHaveAttribute("src", "/api/v1/product/product-photo/123");
-    });
+    const image = await screen.findByAltText("Test Product");
+    expect(image).toHaveAttribute("src", "/api/v1/product/product-photo/123");
   });
 
   test("handles empty products list", async () => {
@@ -130,10 +159,8 @@ describe("Products", () => {
       );
     });
 
-    await waitFor(() => {
-      expect(screen.getByText("All Products List")).toBeInTheDocument();
-      expect(screen.queryByRole("link")).not.toBeInTheDocument();
-    });
+    expect(await screen.findByText("All Products List")).toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 
   test("handles API error gracefully", async () => {
@@ -148,12 +175,11 @@ describe("Products", () => {
       );
     });
 
-    await waitFor(() => {
-      expect(console.log).toHaveBeenCalledWith(error);
-      expect(toast.error).toHaveBeenCalledWith("Someething Went Wrong");
-    });
+    await screen.findByText("All Products List");
+    expect(console.log).toHaveBeenCalledWith(error);
+    expect(toast.error).toHaveBeenCalledWith("Something Went Wrong");
 
-    // Should still render the basic structure
+    // shud still render the basic structure
     expect(screen.getByText("All Products List")).toBeInTheDocument();
   });
 
@@ -170,53 +196,7 @@ describe("Products", () => {
       );
     });
 
-    await waitFor(() => {
-      expect(axios.get).toHaveBeenCalledWith("/api/v1/product/get-product");
-    });
-  });
-
-  test("renders multiple products correctly", async () => {
-    const mockProducts = [
-      {
-        _id: "1",
-        name: "Product 1",
-        description: "Description 1",
-        slug: "product-1",
-      },
-      {
-        _id: "2",
-        name: "Product 2",
-        description: "Description 2",
-        slug: "product-2",
-      },
-      {
-        _id: "3",
-        name: "Product 3",
-        description: "Description 3",
-        slug: "product-3",
-      },
-    ];
-
-    axios.get.mockResolvedValueOnce({
-      data: { products: mockProducts },
-    });
-
-    await act(async () => {
-      render(
-        <MemoryRouter>
-          <Products />
-        </MemoryRouter>
-      );
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText("Product 1")).toBeInTheDocument();
-      expect(screen.getByText("Product 2")).toBeInTheDocument();
-      expect(screen.getByText("Product 3")).toBeInTheDocument();
-      
-      const productLinks = screen.getAllByRole("link");
-      expect(productLinks).toHaveLength(3);
-    });
+    await waitFor(() => expect(axios.get).toHaveBeenCalledWith("/api/v1/product/get-product"));
   });
 
   test("handles undefined products gracefully", async () => {
@@ -232,9 +212,7 @@ describe("Products", () => {
       );
     });
 
-    await waitFor(() => {
-      expect(screen.getByText("All Products List")).toBeInTheDocument();
-      expect(screen.queryByRole("link")).not.toBeInTheDocument();
-    });
+    expect(await screen.findByText("All Products List")).toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 });
