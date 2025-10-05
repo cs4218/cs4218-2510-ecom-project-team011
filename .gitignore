@@ -9,3 +9,5 @@ sonar-project.properties
 /coverage
 /schema/*.json
 /coverage.DS_Store
+.DS_Store
+coverage/

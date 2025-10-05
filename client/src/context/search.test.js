@@ -4,7 +4,7 @@ import { SearchProvider, useSearch } from './search';
 import '@testing-library/jest-dom/extend-expect';
 
 // Test component that uses the useSearch hook
-const TestComponent = () => {
+const FakeComponent = () => {
   const [searchState, setSearchState] = useSearch();
   
   return (
@@ -33,168 +33,203 @@ const TestComponent = () => {
   );
 };
 
-// Test component that renders children
-const TestWrapper = ({ children }) => (
-  <SearchProvider>
-    {children}
-  </SearchProvider>
-);
-
 describe('SearchContext', () => {
   describe('SearchProvider', () => {
-    it('should render children without crashing', () => {
+    test('renders children', () => {
+      // Arrange
       render(
         <SearchProvider>
           <div data-testid="child">Test Child</div>
         </SearchProvider>
       );
       
+      // Act & Assert
       expect(screen.getByTestId('child')).toBeInTheDocument();
     });
 
-    it('should provide initial search state', () => {
+    test('provides initial empty keyword', () => {
+      // Arrange
       render(
         <SearchProvider>
-          <TestComponent />
+          <FakeComponent />
         </SearchProvider>
       );
       
+      // Act & Assert
       expect(screen.getByTestId('keyword')).toHaveTextContent('');
+    });
+
+    test('provides initial empty results', () => {
+      // Arrange
+      render(
+        <SearchProvider>
+          <FakeComponent />
+        </SearchProvider>
+      );
+      
+      // Act & Assert
       expect(screen.getByTestId('results-count')).toHaveTextContent('0');
     });
 
-    it('should provide search state and setter function', () => {
+    test('provides keyword state', () => {
+      // Arrange
       render(
         <SearchProvider>
-          <TestComponent />
+          <FakeComponent />
         </SearchProvider>
       );
       
-      // Check that the state is accessible
+      // Act & Assert
       expect(screen.getByTestId('keyword')).toBeInTheDocument();
-      expect(screen.getByTestId('results-count')).toBeInTheDocument();
+    });
+
+    test('provides results state', () => {
+      // Arrange
+      render(
+        <SearchProvider>
+          <FakeComponent />
+        </SearchProvider>
+      );
       
-      // Check that setter functions are available (buttons are rendered)
+      // Act & Assert
+      expect(screen.getByTestId('results-count')).toBeInTheDocument();
+    });
+
+    test('provides keyword setter function', () => {
+      // Arrange
+      render(
+        <SearchProvider>
+          <FakeComponent />
+        </SearchProvider>
+      );
+      
+      // Act & Assert
       expect(screen.getByTestId('update-keyword')).toBeInTheDocument();
+    });
+
+    test('provides results setter function', () => {
+      // Arrange
+      render(
+        <SearchProvider>
+          <FakeComponent />
+        </SearchProvider>
+      );
+      
+      // Act & Assert
       expect(screen.getByTestId('update-results')).toBeInTheDocument();
+    });
+
+    test('provides reset function', () => {
+      // Arrange
+      render(
+        <SearchProvider>
+          <FakeComponent />
+        </SearchProvider>
+      );
+      
+      // Act & Assert
       expect(screen.getByTestId('reset-search')).toBeInTheDocument();
     });
   });
 
   describe('useSearch hook', () => {
-    it('should return search state and setter function', () => {
+    test('returns search state and setter function', () => {
+      // Arrange
       render(
         <SearchProvider>
-          <TestComponent />
+          <FakeComponent />
         </SearchProvider>
       );
       
-      // Initial state should be empty
+      // Act & Assert
       expect(screen.getByTestId('keyword')).toHaveTextContent('');
       expect(screen.getByTestId('results-count')).toHaveTextContent('0');
     });
 
-    it('should update keyword when setter is called', () => {
+    test('updates keyword when setter is called', () => {
+      // Arrange
       render(
         <SearchProvider>
-          <TestComponent />
+          <FakeComponent />
         </SearchProvider>
       );
       
-      // Click update keyword button
+      // Act
       act(() => {
         screen.getByTestId('update-keyword').click();
       });
       
+      // Assert
       expect(screen.getByTestId('keyword')).toHaveTextContent('test keyword');
     });
 
-    it('should update results when setter is called', () => {
+    test('updates results when setter is called', () => {
+      // Arrange
       render(
         <SearchProvider>
-          <TestComponent />
+          <FakeComponent />
         </SearchProvider>
       );
       
-      // Click update results button
+      // Act
       act(() => {
         screen.getByTestId('update-results').click();
       });
       
+      // Assert
       expect(screen.getByTestId('results-count')).toHaveTextContent('1');
     });
 
-    it('should reset search state when reset button is clicked', () => {
+    test('resets search state when reset button is clicked', () => {
+      // Arrange
       render(
         <SearchProvider>
-          <TestComponent />
+          <FakeComponent />
         </SearchProvider>
       );
       
-      // First update the state
+      // Act
       act(() => {
         screen.getByTestId('update-keyword').click();
         screen.getByTestId('update-results').click();
-      });
-      
-      // Verify state was updated
-      expect(screen.getByTestId('keyword')).toHaveTextContent('test keyword');
-      expect(screen.getByTestId('results-count')).toHaveTextContent('1');
-      
-      // Reset the state
-      act(() => {
         screen.getByTestId('reset-search').click();
       });
       
-      // Verify state was reset
+      // Assert
       expect(screen.getByTestId('keyword')).toHaveTextContent('');
       expect(screen.getByTestId('results-count')).toHaveTextContent('0');
     });
 
-    it('should maintain state updates across multiple setter calls', () => {
+    test('maintains state updates across multiple setter calls', () => {
+      // Arrange
       render(
         <SearchProvider>
-          <TestComponent />
+          <FakeComponent />
         </SearchProvider>
       );
       
-      // Update keyword first
+      // Act
       act(() => {
         screen.getByTestId('update-keyword').click();
       });
       
+      // Assert
       expect(screen.getByTestId('keyword')).toHaveTextContent('test keyword');
       expect(screen.getByTestId('results-count')).toHaveTextContent('0');
       
-      // Then update results
+      // Second cycle of act assert to verify state transition
+      // Act
       act(() => {
         screen.getByTestId('update-results').click();
       });
       
-      // Both should be updated
+      // Assert
       expect(screen.getByTestId('keyword')).toHaveTextContent('test keyword');
       expect(screen.getByTestId('results-count')).toHaveTextContent('1');
     });
 
-    it('should handle partial state updates correctly', () => {
-      render(
-        <SearchProvider>
-          <TestComponent />
-        </SearchProvider>
-      );
-      
-      // Update only keyword
-      act(() => {
-        screen.getByTestId('update-keyword').click();
-      });
-      
-      expect(screen.getByTestId('keyword')).toHaveTextContent('test keyword');
-      expect(screen.getByTestId('results-count')).toHaveTextContent('0');
-    });
-  });
-
-  describe('Context Provider Value', () => {
-    it('should provide an array with state and setter', () => {
+    test('provides an array with state and setter', () => {
+      // Arrange
       let contextValue;
       
       const ContextInspector = () => {
@@ -208,13 +243,15 @@ describe('SearchContext', () => {
         </SearchProvider>
       );
       
+      // Act & Assert
       expect(Array.isArray(contextValue)).toBe(true);
       expect(contextValue).toHaveLength(2);
       expect(typeof contextValue[0]).toBe('object');
       expect(typeof contextValue[1]).toBe('function');
     });
 
-    it('should have correct initial state structure', () => {
+    test('has correct initial state structure', () => {
+      // Arrange
       let contextValue;
       
       const ContextInspector = () => {
@@ -228,26 +265,29 @@ describe('SearchContext', () => {
         </SearchProvider>
       );
       
+      // Act
       const [state] = contextValue;
+      
+      // Assert
       expect(state).toHaveProperty('keyword');
       expect(state).toHaveProperty('results');
       expect(state.keyword).toBe('');
       expect(Array.isArray(state.results)).toBe(true);
       expect(state.results).toHaveLength(0);
     });
-  });
 
-  describe('Error Handling', () => {
-    it('should throw error when useSearch is used outside provider', () => {
-      // Suppress console.error for this test since we expect an error
+    test('throws error when useSearch is used outside provider', () => {
+      // Arrange
+      // temp suppress console.error
       const originalError = console.error;
       console.error = jest.fn();
       
+      // Act & Assert
       expect(() => {
-        render(<TestComponent />);
+        render(<FakeComponent />);
       }).toThrow();
       
-      // Restore console.error
+      // unsuppress console.error
       console.error = originalError;
     });
   });
