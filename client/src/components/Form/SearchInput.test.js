@@ -30,39 +30,100 @@ describe("SearchInput", () => {
     console.log = jest.fn(); // Mock console.log to avoid noise in tests
   });
 
-  test("renders search form with input and button", () => {
+  test("renders search form", () => {
+    // Arrange
     render(
       <MemoryRouter>
         <SearchInput />
       </MemoryRouter>
     );
 
+    // Act & Assert
     expect(screen.getByRole("search")).toBeInTheDocument();
+  });
+
+  test("renders search input field", () => {
+    // Arrange
+    render(
+      <MemoryRouter>
+        <SearchInput />
+      </MemoryRouter>
+    );
+
+    // Act & Assert
     expect(screen.getByPlaceholderText("Search")).toBeInTheDocument();
+  });
+
+  test("renders search button", () => {
+    // Arrange
+    render(
+      <MemoryRouter>
+        <SearchInput />
+      </MemoryRouter>
+    );
+
+    // Act & Assert
     expect(screen.getByRole("button", { name: "Search" })).toBeInTheDocument();
   });
 
-  test("displays current keyword value from context", () => {
+  test("input has correct placeholder attribute", () => {
+    // Arrange
     render(
       <MemoryRouter>
         <SearchInput />
       </MemoryRouter>
     );
 
+    // Act
     const input = screen.getByPlaceholderText("Search");
+    
+    // Assert
+    expect(input).toHaveAttribute("placeholder", "Search");
+  });
+
+  test("input has correct aria-label attribute", () => {
+    // Arrange
+    render(
+      <MemoryRouter>
+        <SearchInput />
+      </MemoryRouter>
+    );
+
+    // Act
+    const input = screen.getByLabelText("Search");
+    
+    // Assert
+    expect(input).toHaveAttribute("aria-label", "Search");
+  });
+
+  test("displays current keyword value from context", () => {
+    // Arrange
+    render(
+      <MemoryRouter>
+        <SearchInput />
+      </MemoryRouter>
+    );
+
+    // Act
+    const input = screen.getByPlaceholderText("Search");
+    
+    // Assert
     expect(input).toHaveValue("test search");
   });
 
   test("updates keyword when input changes", () => {
+    // Arrange
     render(
       <MemoryRouter>
         <SearchInput />
       </MemoryRouter>
     );
 
+    // Act
     const input = screen.getByPlaceholderText("Search");
     fireEvent.change(input, { target: { value: "new search term" } });
 
+    // Assert
     expect(mockSetValues).toHaveBeenCalledWith({
       keyword: "new search term",
       results: [],
@@ -70,6 +131,7 @@ describe("SearchInput", () => {
   });
 
   test("submits form and navigates on successful search", async () => {
+    // Arrange
     const mockSearchResults = [
       { id: 1, name: "Product 1" },
       { id: 2, name: "Product 2" },
@@ -82,9 +144,11 @@ describe("SearchInput", () => {
       </MemoryRouter>
     );
 
+    // Act
     const form = screen.getByRole("search");
     fireEvent.submit(form);
 
+    // Assert
     await waitFor(() => {
       expect(axios.get).toHaveBeenCalledWith(
         "/api/v1/product/search/test search"
@@ -99,6 +163,7 @@ describe("SearchInput", () => {
   });
 
   test("handles API error gracefully", async () => {
+    // Arrange
     const error = new Error("API Error");
     axios.get.mockRejectedValueOnce(error);
 
@@ -108,9 +173,11 @@ describe("SearchInput", () => {
       </MemoryRouter>
     );
 
+    // Act
     const form = screen.getByRole("search");
     fireEvent.submit(form);
 
+    // Assert
     await waitFor(() => {
       expect(console.log).toHaveBeenCalledWith(error);
     });
@@ -123,6 +190,7 @@ describe("SearchInput", () => {
   });
 
   test("form submission triggers search with current keyword", async () => {
+    // Arrange
     axios.get.mockResolvedValueOnce({ data: [] });
 
     render(
@@ -131,9 +199,11 @@ describe("SearchInput", () => {
       </MemoryRouter>
     );
 
+    // Act
     const form = screen.getByRole("search");
     fireEvent.submit(form);
 
+    // Assert
     await waitFor(() => {
       expect(axios.get).toHaveBeenCalledWith(
         "/api/v1/product/search/test search"

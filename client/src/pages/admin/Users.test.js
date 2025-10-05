@@ -9,15 +9,62 @@ jest.mock("../../components/Layout", () => ({ children }) => <div>{children}</di
 jest.mock("../../components/AdminMenu", () => () => <div data-testid="admin-menu" />);
 
 describe("Admin Users page", () => {
-  test("renders heading and admin menu", () => {
+  test("renders heading", () => {
+    // Arrange
     render(
       <MemoryRouter>
         <Users />
       </MemoryRouter>
     );
 
+    // Act Assert
     expect(screen.getByText(/All Users/i)).toBeInTheDocument();
+  });
+
+  test("renders admin menu", () => {
+    // Arrange
+    render(
+      <MemoryRouter>
+        <Users />
+      </MemoryRouter>
+    );
+
+    // Act Assert
     expect(screen.getByTestId("admin-menu")).toBeInTheDocument();
+  });
+
+  test("admin menu is contained within Layout", () => {
+    // Arrange
+    render(
+      <MemoryRouter>
+        <Users />
+      </MemoryRouter>
+    );
+
+    // Act
+    const adminMenu = screen.getByTestId("admin-menu");
+    const layoutContainer = adminMenu.closest('div'); // Layout is mocked as div
+    
+    // Assert
+    expect(layoutContainer).toBeInTheDocument();
+    expect(adminMenu).toBeInTheDocument();
+  });
+
+  test("heading is contained within Layout", () => {
+    // Arrange
+    render(
+      <MemoryRouter>
+        <Users />
+      </MemoryRouter>
+    );
+
+    // Act
+    const heading = screen.getByText(/All Users/i);
+    const layoutContainer = heading.closest('div'); // Layout is mocked as div
+    
+    // Assert
+    expect(layoutContainer).toBeInTheDocument();
+    expect(heading).toBeInTheDocument();
   });
 });
 
