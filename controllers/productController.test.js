@@ -1162,7 +1162,7 @@ describe("Product Controller Tests", () => {
       });
     });
 
-    it("should throw an error if no pid provided", async () => {
+    it("should return 400 if no pid provided", async () => {
       // Arrange
       const req = mockReq({}, {}, { cid: "category123" });
       const res = mockRes();
@@ -1178,7 +1178,7 @@ describe("Product Controller Tests", () => {
       });
     });
 
-    it("should throw an error if no cid provided", async () => {
+    it("should return 400 if no cid provided", async () => {
       // Arrange
       const req = mockReq({}, {}, { pid: "1" });
       const res = mockRes();
@@ -1260,6 +1260,40 @@ describe("Product Controller Tests", () => {
         message: "Products by category retrieved",
         category: mockCategory,
         products: mockProducts,
+      });
+    });
+
+    it("should return 400 if no slug provided", async () => {
+      // Arrange
+      const req = mockReq();
+      const res = mockRes();
+
+      // Act
+      await productCategoryController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.send).toHaveBeenCalledWith({
+        success: false,
+        message: "No slug in request",
+      });
+    });
+
+    it("should return 400 if no category found", async () => {
+      // Arrange
+      const req = mockReq({}, {}, { slug: "no-category" });
+      const res = mockRes();
+
+      MockCategoryModel.findOne.mockResolvedValue(null);
+
+      // Act
+      await productCategoryController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.send).toHaveBeenCalledWith({
+        success: false,
+        message: "Category not found",
       });
     });
 

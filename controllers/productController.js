@@ -382,14 +382,14 @@ export const relatedProductController = async (req, res) => {
       return res.status(400).send({
         success: false,
         message: "No product id found",
-      })
+      });
     }
-    
+
     if (!cid) {
       return res.status(400).send({
         success: false,
         message: "No category id found",
-      })
+      });
     }
 
     const products = await productModel
@@ -419,7 +419,16 @@ export const relatedProductController = async (req, res) => {
 // get products by category
 export const productCategoryController = async (req, res) => {
   try {
-    const category = await categoryModel.findOne({ slug: req.params.slug });
+    const slug = req.params.slug;
+    
+    if (!slug) {
+      return res.status(400).send({
+        success: false,
+        message: "No slug in request",
+      });
+    }
+
+    const category = await categoryModel.findOne({ slug: slug });
 
     if (!category) {
       return res.status(400).send({
