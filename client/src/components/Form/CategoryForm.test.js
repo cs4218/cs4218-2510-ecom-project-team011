@@ -34,7 +34,6 @@ describe("CategoryForm", () => {
   // TEST #2
   test("typing calls setValue with latest text", async () => {
     // Arrange
-    const user = userEvent.setup();
     const handleSubmit = jest.fn();
     const setValue = jest.fn();
 
@@ -49,7 +48,7 @@ describe("CategoryForm", () => {
     const input = screen.getByPlaceholderText(/enter new category/i);
 
     // Act
-    await user.type(input, "Electronics");
+    await userEvent.type(input, "Electronics");
 
     // Assert
     expect(setValue).toHaveBeenCalled(); // called for each keystroke
@@ -60,7 +59,6 @@ describe("CategoryForm", () => {
   // TEST #3
   test("submitting the form calls handleSubmit", async () => {
     // Arrange
-    const user = userEvent.setup();
     const handleSubmit = jest.fn((e) => e.preventDefault());
     const setValue = jest.fn();
 
@@ -75,7 +73,7 @@ describe("CategoryForm", () => {
     const button = screen.getByRole("button", { name: /submit/i });
 
     // Act
-    await user.click(button);
+    await userEvent.click(button);
 
     // Assert
     expect(handleSubmit).toHaveBeenCalledTimes(1);
@@ -87,7 +85,6 @@ describe("CategoryForm", () => {
   // TEST #4
   test("pressing Enter in the input submits the form", async () => {
     // Arrange
-    const user = userEvent.setup();
     const handleSubmit = jest.fn((e) => e.preventDefault());
     const setValue = jest.fn();
 
@@ -102,7 +99,7 @@ describe("CategoryForm", () => {
     const input = screen.getByPlaceholderText(/enter new category/i);
 
     // Act
-    await user.type(input, "Toys{enter}");
+    await userEvent.type(input, "Toys{enter}");
 
     // Assert
     expect(handleSubmit).toHaveBeenCalledTimes(1);
