@@ -164,14 +164,17 @@ export const testController = (req, res) => {
   }
 };
 
-//update prfole
+// update profile
 export const updateProfileController = async (req, res) => {
   try {
     const { name, email, password, address, phone } = req.body;
     const user = await userModel.findById(req.user._id);
     //password
+    if (!user) {
+      return res.json({ error: "User does not exist. Please log out and register again." });
+    }
     if (password && password.length < 6) {
-      return res.json({ error: "Passsword is required and 6 character long" });
+      return res.json({ error: "Passsword is required and at least 6 character long" });
     }
     const hashedPassword = password ? await hashPassword(password) : undefined;
     const updatedUser = await userModel.findByIdAndUpdate(
@@ -186,14 +189,14 @@ export const updateProfileController = async (req, res) => {
     );
     res.status(200).send({
       success: true,
-      message: "Profile Updated SUccessfully",
+      message: "Profile updated successfully",
       updatedUser,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(400).send({
       success: false,
-      message: "Error WHile Update profile",
+      message: "Error while updating profile",
       error,
     });
   }
@@ -211,7 +214,7 @@ export const getOrdersController = async (req, res) => {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Error WHile Geting Orders",
+      message: "Error while getting orders",
       error,
     });
   }
@@ -229,7 +232,7 @@ export const getAllOrdersController = async (req, res) => {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Error WHile Geting Orders",
+      message: "Error while getting orders",
       error,
     });
   }
@@ -250,7 +253,7 @@ export const orderStatusController = async (req, res) => {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Error While Updateing Order",
+      message: "Error while updating order",
       error,
     });
   }
