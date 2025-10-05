@@ -5,6 +5,7 @@ https://github.com/cs4218/cs4218-2510-ecom-project-team011/actions/runs/17602852
 | Name | Frontend | Backend |
 | - | - | - |
 | Chun Jie | components/Routes/Private.js, components/UserMenu.js, context/Auth.js, pages/user/Dashboard.js, pages/user/Orders.js, pages/user/Profile.js | controllers/authController.js (updateProfileController, getOrdersController, getAllOrdersController), middlewares/authMiddleware.js, helpers/authHelper.js |
+| Sean Teh | pages/Contact.js, pages/Policy.js, pages/ProductDetails.js, pages/CategoryProduct.js,  | controllers/productController.js (getProductController, getSingleProductController, productPhotoController, productFiltersController, productCountController, productListController, searchProductController, relatedProductController, productCategoryController), models/productModel.js |
 
 
 # CS4218 Project - Virtual Vault
