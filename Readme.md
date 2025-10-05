@@ -1,5 +1,11 @@
-# Group 11 Week 5 Lab Link:
+# Milestone 1 
+## Group 11 Week 5 Lab Link:
 https://github.com/cs4218/cs4218-2510-ecom-project-team011/actions/runs/17602852868/job/50008042867
+## Assigned Work
+| Name | Frontend | Backend |
+| - | - | - |
+| Chun Jie | components/Routes/Private.js, components/UserMenu.js, context/Auth.js, pages/user/Dashboard.js, pages/user/Orders.js, pages/user/Profile.js | controllers/authController.js (updateProfileController, getOrdersController, getAllOrdersController), middlewares/authMiddleware.js, helpers/authHelper.js |
+
 
 # CS4218 Project - Virtual Vault
 
