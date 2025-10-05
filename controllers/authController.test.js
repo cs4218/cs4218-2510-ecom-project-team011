@@ -1,5 +1,3 @@
-import "@testing-library/jest-dom";
-
 // Mocks 
 jest.mock("../models/userModel.js", () => {
   const mockModel = jest.fn(); // constructor
