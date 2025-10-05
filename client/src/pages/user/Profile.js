@@ -34,7 +34,7 @@ const Profile = () => {
         phone,
         address,
       });
-      if (data?.errro) {
+      if (data?.error) {
         toast.error(data?.error);
       } else {
         setAuth({ ...auth, user: data?.updatedUser });
@@ -66,7 +66,7 @@ const Profile = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="form-control"
-                    id="exampleInputEmail1"
+                    id="exampleInputName1"
                     placeholder="Enter Your Name"
                     autoFocus
                   />
@@ -78,7 +78,7 @@ const Profile = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     className="form-control"
                     id="exampleInputEmail1"
-                    placeholder="Enter Your Email "
+                    placeholder="Enter Your Email"
                     disabled
                   />
                 </div>
@@ -98,7 +98,7 @@ const Profile = () => {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="form-control"
-                    id="exampleInputEmail1"
+                    id="exampleInputPhone1"
                     placeholder="Enter Your Phone"
                   />
                 </div>
@@ -108,7 +108,7 @@ const Profile = () => {
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     className="form-control"
-                    id="exampleInputEmail1"
+                    id="exampleInputAddress1"
                     placeholder="Enter Your Address"
                   />
                 </div>
