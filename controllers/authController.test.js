@@ -1,7 +1,6 @@
-import React from 'react';
-import '@testing-library/jest-dom/extend-expect';
-// Mocks 
+import "@testing-library/jest-dom";
 
+// Mocks 
 jest.mock("../models/userModel.js", () => {
   const mockModel = jest.fn(); // constructor
   mockModel.findOne = jest.fn();
