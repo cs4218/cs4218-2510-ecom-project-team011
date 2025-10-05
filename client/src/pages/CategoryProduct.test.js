@@ -44,8 +44,23 @@ describe("ProductDetails", () => {
     {
       name: "Laptop",
       slug: "laptop",
-      description: "A powerful laptop for professionals.",
+      // 60 characters, so should not be truncated
+      description: "012345678901234567890123456789012345678901234567890123456789",
       price: 999,
+      category: mockCategory,
+      quantity: 5,
+      photo: {
+        data: "mockdata2",
+        contentType: "image/png",
+      },
+      shipping: false,
+    },
+    {
+      name: "Computer",
+      slug: "computer",
+      // 61 characters, so should be truncated with ellipses
+      description: "0123456789012345678901234567890123456789012345678901234567890",
+      price: 500,
       category: mockCategory,
       quantity: 5,
       photo: {
@@ -106,6 +121,22 @@ describe("ProductDetails", () => {
 
       const buttons = screen.getAllByRole("button", { name: /More Details/i });
       expect(buttons).toHaveLength(mockProducts.length);
+    });
+  });
+
+  it("should render descriptions of different length properly", async () => {
+    // Act
+    render(<CategoryProduct />);
+
+    // Assert
+    await waitFor(() => {
+      // shorter descriptions should be rendered in full
+      expect(screen.getByText(mockProducts[0].description)).toBeInTheDocument();
+      expect(screen.getByText(mockProducts[1].description)).toBeInTheDocument();
+      // very long descriptions should not be rendered in full; rendered with ellipses
+      expect(
+        screen.getByText(mockProducts[2].description.substring(0, 60) + "...")
+      ).toBeInTheDocument();
     });
   });
 

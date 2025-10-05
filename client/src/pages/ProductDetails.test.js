@@ -49,7 +49,9 @@ describe("ProductDetails", () => {
       _id: "3",
       name: "Test Product 3",
       price: 300,
-      description: "Test Description 3",
+      // 60 characters so should not be truncated
+      description:
+        "012345678901234567890123456789012345678901234567890123456789",
       category: {
         _id: "1",
         name: "Electronics",
@@ -61,8 +63,9 @@ describe("ProductDetails", () => {
       _id: "4",
       name: "Test Product 4",
       price: 300,
+      // 61 characters so should be truncated
       description:
-        "Test Description 4reallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallylong",
+        "0123456789012345678901234567890123456789012345678901234567890",
       category: {
         _id: "1",
         name: "Electronics",
@@ -113,8 +116,19 @@ describe("ProductDetails", () => {
     await waitFor(() => {
       expect(screen.getByTestId("layout")).toBeInTheDocument();
       expect(screen.getByAltText(mockProduct.name)).toBeInTheDocument();
+    });
+  });
+
+  it("should render descriptions of different length properly", async () => {
+    // Act
+    render(<ProductDetails />);
+
+    // Assert
+    await waitFor(() => {
+      // shorter descriptions should be rendered in full
       expect(screen.getByText(mockProducts[0].description)).toBeInTheDocument();
       expect(screen.getByText(mockProducts[1].description)).toBeInTheDocument();
+      // very long descriptions should not be rendered in full; rendered with ellipses
       expect(
         screen.getByText(mockProducts[2].description.substring(0, 60) + "...")
       ).toBeInTheDocument();
