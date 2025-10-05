@@ -12,7 +12,7 @@ https://github.com/cs4218/cs4218-2510-ecom-project-team011/actions/runs/17602852
 
 | Leon | pages/Homepage.js, context/cart.js, hooks/useCategory.js, pages/Categories.js | controllers/categoryController.js (categoryController & singleCategoryController), controllers/productController.js (brantreeTokenController & brainTreePaymentController), models/categoryModel.js|
 
-| Arushi | pages/Auth/Register.js, pages/Auth/Login.js, components/AdminMenu.js, pages/admin/AdminDashboard.js, components/Form/CategoryForm.js, pages/admin/CreateProduct.js, pages/admin/CreateCategory.js, pages/admin/UpdateProduct.js, pages/admin/AdminOrders.js | controllers/authController.js (registerController, loginController, forgotPaswordController, testController), controllers/categoryController.js (createCategoryController, updateCategoryController, deleteCategoryController)|
+| Arushi | pages/Auth/Register.js, pages/Auth/Login.js, components/AdminMenu.js, pages/admin/AdminDashboard.js, components/Form/CategoryForm.js, pages/admin/CreateProduct.js, pages/admin/CreateCategory.js, pages/admin/UpdateProduct.js, pages/admin/AdminOrders.js | controllers/authController.js (registerController, loginController, forgotPaswordController, testController), controllers/categoryController.js (createCategoryController, updateCategoryController, deleteCategoryController) |
 
 
 # CS4218 Project - Virtual Vault
