@@ -994,7 +994,7 @@ describe("Product Controller Tests", () => {
     });
 
     it("should default to page 1 when no page parameter provided", async () => {
-      // Assign
+      // Arrange
       const req = mockReq();
       const res = mockRes();
 
@@ -1015,7 +1015,7 @@ describe("Product Controller Tests", () => {
     });
 
     it("should handle error during pagination", async () => {
-      // Assign
+      // Arrange
       const error = new Error("Pagination error");
       const req = mockReq({}, {}, { page: "-1" });
       const res = mockRes();
@@ -1045,7 +1045,7 @@ describe("Product Controller Tests", () => {
   // Sean
   describe("Given that searchProductController is called", () => {
     it("should search products by keyword successfully", async () => {
-      // Assign
+      // Arrange
       const mockResults = [
         { _id: "1", name: "iPhone 13", description: "Latest iPhone" },
         { _id: "2", name: "Samsung Galaxy", description: "Android phone" },
@@ -1078,7 +1078,7 @@ describe("Product Controller Tests", () => {
     });
 
     it("should handle error during search", async () => {
-      // Assign
+      // Arrange
       const error = new Error("Search error");
       const req = mockReq({}, {}, { keyword: "error" });
       const res = mockRes();
@@ -1102,7 +1102,7 @@ describe("Product Controller Tests", () => {
     });
 
     it("should return empty array when no products match search", async () => {
-      // Assign
+      // Arrange
       const req = mockReq({}, {}, { keyword: "nonexistent" });
       const res = mockRes();
 
@@ -1127,7 +1127,7 @@ describe("Product Controller Tests", () => {
   // Sean
   describe("Given that relatedProductController is called", () => {
     it("should return related products successfully", async () => {
-      // Assign
+      // Arrange
       const mockProducts = [
         { _id: "2", name: "Related Product 1", category: "category123" },
         { _id: "3", name: "Related Product 2", category: "category123" },
@@ -1163,7 +1163,7 @@ describe("Product Controller Tests", () => {
     });
 
     it("should handle error when fetching related products", async () => {
-      // Assign
+      // Arrange
       const error = new Error("Related products error");
       const req = mockReq({}, {}, { pid: "1", cid: "category123" });
       const res = mockRes();
@@ -1192,7 +1192,7 @@ describe("Product Controller Tests", () => {
   // Sean
   describe("Given that productCategoryController is called", () => {
     it("should return products by category successfully", async () => {
-      // Assign
+      // Arrange
       const mockCategory = {
         _id: "category-id-1",
         name: "Electronics",
@@ -1232,7 +1232,7 @@ describe("Product Controller Tests", () => {
     });
 
     it("should handle error when category not found", async () => {
-      // Assign
+      // Arrange
       const error = new Error("Category not found");
       const req = mockReq({}, {}, { slug: "invalid-category" });
       const res = mockRes();

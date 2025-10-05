@@ -20,7 +20,7 @@ jest.mock("./../components/Layout", () => {
 
 // Generated with the help of AI (ChatGPT and Github Copilot)
 describe("ProductDetails", () => {
-  // Assign
+  // Arrange
   const mockCategory = {
     isActive: true,
     name: "Electronics",

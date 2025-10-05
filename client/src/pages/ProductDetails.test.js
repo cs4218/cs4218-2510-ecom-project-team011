@@ -81,7 +81,7 @@ describe("ProductDetails", () => {
   });
 
   beforeEach(() => {
-    // Assign
+    // Arrange
     jest.clearAllMocks();
     axios.get.mockImplementation((url) => {
       if (url.includes("/product/get-product")) {
