@@ -5,26 +5,11 @@ jest.mock("mongoose", () => ({
   connect: jest.fn(),
 }));
 
-const installColorStubs = () => {
-  const defineGetter = (name) => {
-    if (!Object.getOwnPropertyDescriptor(String.prototype, name)) {
-      Object.defineProperty(String.prototype, name, {
-        configurable: true,
-        get() { return this; },
-      });
-    }
-  };
-  defineGetter("bgMagenta");
-  defineGetter("bgRed");
-  defineGetter("white");
-};
-
 describe("connectDB", () => {
   const originalEnv = process.env;
   let consoleSpy;
 
   beforeEach(() => {
-    installColorStubs();
     jest.resetModules();
     process.env = { ...originalEnv, MONGO_URL: "mongodb://localhost:27017/test" };
     consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});

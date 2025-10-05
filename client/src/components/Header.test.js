@@ -209,7 +209,6 @@ describe("Header", () => {
     useAuth.mockReturnValue([{ user: { name: "Alice", role: 1 }, token: "t" }, mockSetAuth]);
     useCart.mockReturnValue([[]]);
 
-    // Mock localStorage
     const localStorageMock = {
       removeItem: jest.fn(),
     };
@@ -223,19 +222,73 @@ describe("Header", () => {
       </MemoryRouter>
     );
 
-    // Act - click the logout link
+    // Act
     const logoutLink = screen.getByRole("link", { name: /logout/i });
     
     act(() => {
       logoutLink.click();
     });
 
-    // Assert - verify setAuth was called with logout state
+    // Assert
     expect(mockSetAuth).toHaveBeenCalledWith({
       user: null,
       token: "",
     });
     expect(localStorageMock.removeItem).toHaveBeenCalledWith("auth");
+  });
+
+  test("FSM Test: header elements present after login then logout", () => {
+    useCart.mockReturnValue([[]]);
+
+    let authState = { user: null, token: "" };
+    const mockSetAuth = (next) => {
+      authState = next;
+    };
+    useAuth.mockImplementation(() => [authState, mockSetAuth]);
+
+    const { rerender } = render(
+      <MemoryRouter>
+        <Header />
+      </MemoryRouter>
+    );
+
+    //login
+    authState = { user: { name: "Alice", role: 1 }, token: "t" };
+    rerender(
+      <MemoryRouter>
+        <Header />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole("link", { name: /home/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^categories$/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /cart/i })).toBeInTheDocument();
+    expect(screen.getByText(/Alice/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /dashboard/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /logout/i })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /register/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /login/i })).not.toBeInTheDocument();
+
+    // Logout
+    const logoutLink = screen.getByRole("link", { name: /logout/i });
+    act(() => {
+      logoutLink.click();
+    });
+
+    rerender(
+      <MemoryRouter>
+        <Header />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole("link", { name: /home/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^categories$/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /register/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /login/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /cart/i })).toBeInTheDocument();
+    expect(screen.queryByText(/Alice/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /dashboard/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /logout/i })).not.toBeInTheDocument();
   });
 });
 
