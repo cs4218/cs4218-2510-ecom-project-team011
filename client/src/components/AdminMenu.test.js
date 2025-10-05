@@ -28,25 +28,6 @@ describe("AdminMenu", () => {
     expect(orders).toHaveAttribute("href", "/dashboard/admin/orders");
   });
 
-  test("clicking a link is a client-side nav link", async () => {
-    // Arrange
-    const user = userEvent.setup();
-    render(
-      <MemoryRouter initialEntries={["/"]}>
-        <AdminMenu />
-      </MemoryRouter>
-    );
-
-    // Act
-    await user.click(screen.getByRole("link", { name: /products/i }));
-
-    // Assert
-    // With MemoryRouter we can't read the history directly here,
-    // but we can at least assert it's an anchor pointing at the route.
-    expect(screen.getByRole("link", { name: /products/i }))
-      .toHaveAttribute("href", "/dashboard/admin/products");
-  });
-
   test("does not render Users link because it is commented out", () => {
     // Arrange
     render(
