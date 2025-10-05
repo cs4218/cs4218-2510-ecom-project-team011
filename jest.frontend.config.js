@@ -21,15 +21,9 @@ export default {
 
   // only run these tests
   testMatch: [
-    "<rootDir>/client/src/pages/Policy.test.js",
-    "<rootDir>/client/src/pages/Contact.test.js",
-    "<rootDir>/client/src/pages/ProductDetails.test.js",
-    "<rootDir>/client/src/pages/CategoryProduct.test.js",
-    "<rootDir>/client/src/components/AdminMenu.test.js",
-    "<rootDir>/client/src/pages/Auth/*.test.js",
+    "<rootDir>/client/src/pages/**/*.test.js",
     "<rootDir>/client/src/context/*.test.js",
     "<rootDir>/client/src/components/**/*.test.js",
-    "<rootDir>/client/src/pages/user/*.test.js",
   ],
 
   // jest code coverage
