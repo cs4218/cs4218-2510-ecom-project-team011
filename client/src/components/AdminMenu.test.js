@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import "@testing-library/jest-dom";
 import userEvent from "@testing-library/user-event";
-import AdminMenu from "AdminMenu.js";
+import AdminMenu from "./AdminMenu";
 
 describe("AdminMenu", () => {
   test("renders heading and all links with correct routes", async () => {
