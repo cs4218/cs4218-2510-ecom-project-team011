@@ -32,8 +32,10 @@ app.get('/', (req,res) => {
     res.send("<h1>Welcome to ecommerce app</h1>");
 });
 
-const PORT = process.env.PORT || 6060;
+export default app;
 
-app.listen(PORT, () => {
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
     console.log(`Server running on ${process.env.DEV_MODE} mode on ${PORT}`.bgCyan.white);
-});
+  });
+}
