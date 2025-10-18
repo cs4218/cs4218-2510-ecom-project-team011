@@ -1,4 +1,4 @@
-import { describe } from "node:test"
+import { afterEach, beforeEach, describe } from "node:test"
 import { createExpressTestServer } from "./testutils" 
 import mongoose from "mongoose"
 import { MongoMemoryServer } from "mongodb-memory-server"
@@ -14,24 +14,20 @@ import {updateProfileController} from "../authController"
 // getAllOrdersController, 
 // orderStatusController
 
+
 const testUser = async () => ({
   name: "Timmy",
   email: "Timmy@tim",
-  phone: "12345",
+  phone: "1234567",
   address: "Tim Street",
   password: await hashPassword("timmy"),
   answer: "esports",
 })
 
-describe("UpdateProfileController", () => {
-  /*
-  beforeEach(async () => {
-    mongoServer = await MongoMemoryServer.create()
-  connection = mongoose.createConnection(mongoServer.getUri())
-  })
-  */
+describe("UpdateProfileController", async () => {
+
   
-  it("Updates profile successfully", async () => {
+  it("updates profile successfully", async () => {
     const mongoServer = await MongoMemoryServer.create()
     const connection = mongoose.createConnection(mongoServer.getUri())
     userModel.useConnection(connection)
@@ -42,8 +38,6 @@ describe("UpdateProfileController", () => {
     ], {
       user
     })
-    console.log(mongoServer.getUri())
-    
     
     const updatedUser = {
       ...user,
@@ -64,4 +58,61 @@ describe("UpdateProfileController", () => {
     }
     
   }, 20000)
+
+  it("rejects too short passwords", async () => {
+    const mongoServer = await MongoMemoryServer.create()
+    const connection = mongoose.createConnection(mongoServer.getUri())
+    userModel.useConnection(connection)
+
+    const user = await new userModel(await testUser()).save()
+    const app = createExpressTestServer([
+      ["put", "/", updateProfileController]
+    ], {
+      user
+    })
+
+    const newUser = {
+      ...user,
+      password: "12"
+    }
+
+    const response = await request(app).put("/").send(newUser)
+
+    try {
+      // expect(response.status).toBe(400)
+      expect(response.body.success).toBeFalsy()
+      expect(response.body.error).toContain("6") // expects at least 6 characters
+    } finally {
+      connection.close()
+      mongoServer.stop()
+    }
+  })
+
+  it("rejects non-existent users", async () => {
+    const mongoServer = await MongoMemoryServer.create()
+    const connection = mongoose.createConnection(mongoServer.getUri())
+    userModel.useConnection(connection)
+
+    const user = await new userModel(await testUser()).save()
+    const app = createExpressTestServer([
+      ["put", "/", updateProfileController]
+    ], {
+      user
+    })
+
+    const newUser = {
+      _id: "N",
+      password: "12"
+    }
+
+    const response = await request(app).put("/").send(newUser)
+
+    try {
+      // expect(response.status).toBe(400)
+      expect(response.body.success).toBeFalsy()
+    } finally {
+      connection.close()
+      mongoServer.stop()
+    }
+  })
 })
