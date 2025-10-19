@@ -3,7 +3,7 @@ import Layout from "./../components/Layout";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import "../styles/ProductDetailsStyles.css";
-import { useCart } from "context/cart";
+import { useCart } from "../context/cart";
 import toast from "react-hot-toast";
 
 const ProductDetails = () => {
