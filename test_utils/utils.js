@@ -4,7 +4,26 @@ import productModel from "../models/productModel"
 import orderModel from "../models/orderModel"
 import categoryModel from "../models/categoryModel"
 
-export const initDb = async (connection) => {
+/**
+ * @typedef {import("mongodb").ObjectId} ObjectId
+ */
+
+/**
+ * @typedef {Object} DBData
+ * @property {{ _id?: ObjectId, name: string, isActive: boolean }[]} categories - Categories to put into the database
+ * @property {{ _id?: ObjectId, name: string, email: string, address: string, phone: string, password: string, answer: string }[]} users - Users to put into the database
+ * @property {{ _id?: ObjectId, name: string, slug: string, description: string, price: number, category: ObjectId, quantity: number, shipping: boolean }[]} products - Products to put into the database
+ * @property {{ _id?: ObjectId, products: ObjectId[], buyer: ObjectId, payment: { method: string, amount: number }, status?: string }[]} orders - Orders to put into the database
+ */
+
+
+/**
+ * Initialize database with/without data
+ * @param {import("mongoose").Connection} connection to the db
+ * @param {DBData | undefined} data to be added to the db
+ * @returns the populated values in the database
+ */
+export const initDb = async (connection, data=undefined) => {
   const hashedPassword = await hashPassword("1234567")
   
   if (connection) {
@@ -13,11 +32,20 @@ export const initDb = async (connection) => {
     orderModel.useConnection(connection)
     categoryModel.useConnection(connection)
   }
+
+  if (data) {
+    return {
+      categories: await categoryModel.insertMany(data.categories ?? []),
+      users: await userModel.insertMany(data.users ?? []),
+      products: await productModel.insertMany(data.products ?? []),
+      orders: await orderModel.insertMany(data.orders ?? [])
+    } 
+  }
   
   const [electronics, clothing, home] = await categoryModel.insertMany([
     {name: "electronics", isActive: true},
     {name: "clothing", isActive: true},
-    {name: "home", isActive: true} 
+    {name: "home", isActive: true},
   ])
   
   const categories = [electronics, clothing, home]
