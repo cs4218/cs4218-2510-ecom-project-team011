@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe } from "node:test"
-import { createExpressTestServer } from "./testutils" 
+import { createExpressTestController } from "./testutils" 
 import mongoose from "mongoose"
 import { MongoMemoryServer } from "mongodb-memory-server"
 import userModel from "../../models/userModel"
@@ -136,7 +136,7 @@ describe("updateProfileController", () => {
     userModel.useConnection(connection)
     const user = await new userModel(await testUser()).save()
     
-    const app = createExpressTestServer([
+    const app = createExpressTestController([
       ["put", "/", updateProfileController]
     ], {
       user
@@ -169,7 +169,7 @@ describe("updateProfileController", () => {
     userModel.useConnection(connection)
     
     const user = await new userModel(await testUser()).save()
-    const app = createExpressTestServer([
+    const app = createExpressTestController([
       ["put", "/", updateProfileController]
     ], {
       user
@@ -198,7 +198,7 @@ describe("updateProfileController", () => {
     userModel.useConnection(connection)
     
     const user = await new userModel(await testUser()).save()
-    const app = createExpressTestServer([
+    const app = createExpressTestController([
       ["put", "/", updateProfileController]
     ], {
       user
@@ -238,7 +238,7 @@ describe("getOrdersController", () => {
       status: "deliverd"
     })
     
-    const app = createExpressTestServer([
+    const app = createExpressTestController([
       ["get", "/", getOrdersController]
     ], {
       user
@@ -270,7 +270,7 @@ describe("getAllOrdersController", () => {
     
     const {orders} = await initDb(connection) 
     
-    const app = createExpressTestServer([
+    const app = createExpressTestController([
       ["get", "/", getAllOrdersController]
     ])
     
@@ -301,7 +301,7 @@ describe("orderStatusController", () => {
     
     const {orders} = await initDb(connection) 
     
-    const app = createExpressTestServer([
+    const app = createExpressTestController([
       ["put", "/:orderId", orderStatusController]
     ])
     

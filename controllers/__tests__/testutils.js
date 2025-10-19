@@ -6,7 +6,7 @@ import express from "express";
  * @param {*} options 
  * @returns app
  */
-export function createExpressTestServer(controllers, options = {}) {
+export function createExpressTestController(controllers, options = {}) {
   const {
     user = null,
     role = null,
