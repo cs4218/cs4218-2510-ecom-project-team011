@@ -9,6 +9,15 @@ import { AuthProvider } from "../context/auth";
 import { CartProvider } from "../context/cart";
 import { SearchProvider } from "../context/search";
 
+// Mock localStorage
+const localStorageMock = {
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+};
+global.localStorage = localStorageMock;
+
 jest.mock("axios");
 const mockedAxios = axios;
 
@@ -237,7 +246,7 @@ describe("Header Integration Tests", () => {
       });
 
       // Header should still render properly
-      expect(screen.getByRole("link", { name: /categories/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /^categories$/i })).toBeInTheDocument();
       expect(screen.getByRole("link", { name: /all categories/i })).toBeInTheDocument();
     });
 
@@ -301,7 +310,7 @@ describe("Header Integration Tests", () => {
       await waitFor(() => {
         expect(screen.getByRole("link", { name: /virtual vault/i })).toHaveAttribute("href", "/");
         expect(screen.getByRole("link", { name: /home/i })).toHaveAttribute("href", "/");
-        expect(screen.getByRole("link", { name: /categories/i })).toHaveAttribute("href", "/categories");
+        expect(screen.getByRole("link", { name: /^categories$/i })).toHaveAttribute("href", "/categories");
         expect(screen.getByRole("link", { name: /cart/i })).toHaveAttribute("href", "/cart");
       });
     });
@@ -314,7 +323,7 @@ describe("Header Integration Tests", () => {
       );
 
       // Navigate to categories
-      const categoriesLink = screen.getByRole("link", { name: /categories/i });
+      const categoriesLink = screen.getByRole("link", { name: /^categories$/i });
       fireEvent.click(categoriesLink);
 
       // Header should persist with navigation

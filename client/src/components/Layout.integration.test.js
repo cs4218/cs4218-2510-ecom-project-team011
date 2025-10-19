@@ -8,6 +8,15 @@ import { AuthProvider } from "../context/auth";
 import { CartProvider } from "../context/cart";
 import { SearchProvider } from "../context/search";
 
+// Mock localStorage
+const localStorageMock = {
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+};
+global.localStorage = localStorageMock;
+
 // Test wrapper with real providers
 const TestWrapper = ({ children, initialRoute = "/" }) => (
   <MemoryRouter initialEntries={[initialRoute]}>
@@ -45,7 +54,7 @@ describe("Layout Integration Tests", () => {
         // Header elements
         expect(screen.getByRole("link", { name: /virtual vault/i })).toBeInTheDocument();
         expect(screen.getByRole("link", { name: /home/i })).toBeInTheDocument();
-        expect(screen.getByRole("link", { name: /categories/i })).toBeInTheDocument();
+        expect(screen.getByRole("link", { name: /^categories$/i })).toBeInTheDocument();
         expect(screen.getByRole("link", { name: /cart/i })).toBeInTheDocument();
         
         // Footer elements
