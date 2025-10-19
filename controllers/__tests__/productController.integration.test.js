@@ -28,6 +28,7 @@ import {
   brainTreePaymentController,
 } from "../productController";
 
+// test cases generated with the help of AI
 describe("Product Controller Integration Tests", () => {
   let mongoServer;
   let connection;
