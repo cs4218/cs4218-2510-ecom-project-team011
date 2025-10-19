@@ -9,18 +9,12 @@ export default {
   testMatch: [
     "<rootDir>/test/integration/**/*.test.js",
     "<rootDir>/config/*_integration.test.js",
+    "<rootDir>/**/*.integration.test.js",
+    "<rootDir>/**/*.i.test.js",
   ],
 
   // jest code coverage
-  collectCoverage: true,
-  collectCoverageFrom: [
-    "controllers/**",
-    "helpers/**",
-    "middlewares/**",
-    "config/**",
-    "models/**",
-    "routes/**"
-  ],
+  collectCoverage: false,
   
   // Integration tests may take longer
   testTimeout: 10000,
