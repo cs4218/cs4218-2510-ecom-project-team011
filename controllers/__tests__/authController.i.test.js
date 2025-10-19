@@ -310,7 +310,6 @@ describe("orderStatusController", () => {
     
     const res = await request(app).put(`/${orderToUpdate._id.valueOf()}`).send({ status: newStatus })
     const updatedOrder = await orderModel.findById(orderToUpdate._id).exec()
-    console.log(res.body)
     try {
       expect(res.status).toBe(200)
       expect(updatedOrder.status).toBe(newStatus)
