@@ -13,7 +13,8 @@
     "test:frontend": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.frontend.config.js",
     "test:backend": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.backend.config.js",
     "test:integration:backend": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.integration.backend.config.js --detectOpenHandles",
-    "test:integration:frontend": "npx playwright test"
+    "test:integration:frontend": "npx playwright test",
+    "test:integration": "npm run test:integration:backend && npm run test:integration:frontend"
   },
   "keywords": [],
   "author": "RP",
