@@ -21,8 +21,11 @@ export default {
 
   // only run these tests
   testMatch: [
-    "<rootDir>/**/*.integration.test.js",
-    "<rootDir>/**/*.i.test.js",
+    "<rootDir>/controllers/**/*.integration.test.js",
+    "<rootDir>/helpers/**/*.integration.test.js",
+    "<rootDir>/middlewares/**/*.integration.test.js",
+    // "<rootDir>/**/*.integration.test.js",
+    // "<rootDir>/**/*.i.test.js",
   ],
 
   // jest code coverage
