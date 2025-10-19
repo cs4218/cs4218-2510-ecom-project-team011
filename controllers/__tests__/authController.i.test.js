@@ -6,7 +6,7 @@ import userModel from "../../models/userModel"
 import { hashPassword } from "../../helpers/authHelper"
 import request from "supertest"
 
-import {getOrdersController, updateProfileController} from "../authController"
+import {getAllOrdersController, getOrdersController, orderStatusController, updateProfileController} from "../authController"
 import orderModel from "../../models/orderModel"
 import productModel from "../../models/productModel"
 import categoryModel from "../../models/categoryModel"
@@ -36,12 +36,14 @@ const initDb = async (connection) => {
     orderModel.useConnection(connection)
     categoryModel.useConnection(connection)
   }
-
+  
   const [electronics, clothing, home] = await categoryModel.insertMany([
     {name: "electronics", isActive: true},
     {name: "clothing", isActive: true},
     {name: "home", isActive: true} 
   ])
+  
+  const categories = [electronics, clothing, home]
   
   const users = await userModel.insertMany([
     {
@@ -57,7 +59,7 @@ const initDb = async (connection) => {
       phone: "3", address: "c", answer: "sport3"
     },
   ]);
-
+  
   const [alice, bob, charlie] = users
   
   const products = await productModel.insertMany([
@@ -98,8 +100,7 @@ const initDb = async (connection) => {
       shipping: true,
     },
   ]);
-  console.log("products: ", products)
-
+  
   const [laptop, tshirt, vacuum, headphones] = products
   
   const orders = await orderModel.insertMany([
@@ -119,16 +120,17 @@ const initDb = async (connection) => {
       products: [vacuum._id],
       buyer: charlie._id,
       payment: { method: "cod", amount: 300 },
-      status: "deliverd",
+      status: "deliverd", //TODO: fix spelling error
     },
   ]);
   
-  return {users, products, orders}
+  return {categories, users, products, orders}
 }
 
 describe("updateProfileController", () => {
   
   it("updates profile successfully", async () => {
+    // using a beforeEach doesnt seem to initialize the db before the test starts
     const mongoServer = await MongoMemoryServer.create()
     const connection = mongoose.createConnection(mongoServer.getUri())
     userModel.useConnection(connection)
@@ -247,11 +249,72 @@ describe("getOrdersController", () => {
     try {
       expect(res.status).toBe(200)
       expect(res.body.length).toBe(1)
-
+      
       expect(res.body[0].products[0]._id == (products[0]._id)).toBe(true)
       res.body.map(order => {
         expect(order.buyer._id == (user._id)).toBe(true)
       })
+    } finally {
+      connection.close()
+      mongoServer.stop()
+    }
+  })
+})
+
+describe("getAllOrdersController", () => {
+  it("should give all orders", async () => {
+    const mongoServer = await MongoMemoryServer.create()
+    const connection = mongoose.createConnection(mongoServer.getUri())
+    orderModel.useConnection(connection)
+    userModel.useConnection(connection)
+    
+    const {orders} = await initDb(connection) 
+    
+    const app = createExpressTestServer([
+      ["get", "/", getAllOrdersController]
+    ])
+    
+    const res = await request(app).get("/")
+    
+    
+    try {
+      const resultOrderIds = res.body.map(order => order._id).sort()
+      const expectedOrderIds = orders.map(order => order._id.valueOf()).sort()
+      expect(res.status).toBe(200)
+      expect(resultOrderIds.length).toBe(expectedOrderIds.length)
+      for (let i = 0; i < resultOrderIds.length; i++) {
+        expect(resultOrderIds[i]).toBe(expectedOrderIds[i])
+      }
+    } finally {
+      connection.close()
+      mongoServer.stop()
+    }
+  })
+})
+
+describe("orderStatusController", () => {
+  it("updates an order", async () => {
+    const mongoServer = await MongoMemoryServer.create()
+    const connection = mongoose.createConnection(mongoServer.getUri())
+    orderModel.useConnection(connection)
+    userModel.useConnection(connection)
+    
+    const {orders} = await initDb(connection) 
+    
+    const app = createExpressTestServer([
+      ["put", "/:orderId", orderStatusController]
+    ])
+    
+    const orderToUpdate = orders[0]
+    const newStatus = "cancel"
+    
+    const res = await request(app).put(`/${orderToUpdate._id.valueOf()}`).send({ status: newStatus })
+    const updatedOrder = await orderModel.findById(orderToUpdate._id).exec()
+    console.log(res.body)
+    try {
+      expect(res.status).toBe(200)
+      expect(updatedOrder.status).toBe(newStatus)
+      //TODO: add handling when orderId is invalid
     } finally {
       connection.close()
       mongoServer.stop()
