@@ -388,20 +388,6 @@ export const relatedProductController = async (req, res) => {
   try {
     const { pid, cid } = req.params;
 
-    if (!pid) {
-      return res.status(400).send({
-        success: false,
-        message: "No product id found",
-      });
-    }
-
-    if (!cid) {
-      return res.status(400).send({
-        success: false,
-        message: "No category id found",
-      });
-    }
-
     const products = await productModel
       .find({
         category: cid,
