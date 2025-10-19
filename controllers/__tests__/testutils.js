@@ -29,3 +29,8 @@ export function createExpressTestController(controllers, options = {}) {
 
   return app;
 }
+
+/**
+ * For compatibility
+ */
+export const createExpressTestServer = createExpressTestController
