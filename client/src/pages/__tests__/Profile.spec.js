@@ -69,22 +69,32 @@ testAsUser.describe('Profile editing (authenticated user)', () => {
     // Expect validation error (adjust selector based on your UI)
     await expect(page.getByText(/6/)).toBeVisible();
   });
-
-
+  
+  
   
 });
 
-/*
+const testUserOrder = {
+  products: [""],
+  payment: "Failed",
+  items: 3,
+  buyer: testUser.name,
+  status: "Not Process"
+}
+
 testAsUser.describe('Orders page (authenticated user)', () => {
   testAsUser('shows list of user orders', async ({ page }) => {
     await page.goto('/dashboard/user/');
-    await page.click('text=Orders');
+    await page.getByRole('link', { name: 'Orders' }).click();
+        
+    await expect(page.getByRole('cell', { name: testUserOrder.status })).toBeVisible();
+    await expect(page.getByRole('cell', { name: testUserOrder.buyer })).toBeVisible();
+    await expect(page.getByRole('cell', { name: testUserOrder.payment })).toBeVisible();
+    await expect(page.getByRole('cell', { name: testUserOrder.items })).toBeVisible();
     
-    const ordersTable = page.locator('[data-testid="orders-table"]');
-    await expect(ordersTable).toBeVisible();
-    
+    const rows = await page.locator("tbody tr").all()
+
     // Expect at least one order row (adjust selector as needed)
-    await expect(ordersTable.locator('tr')).toHaveCountGreaterThan(0);
+    await expect(rows.length).toBeGreaterThan(0);
   });
 });
-*/
