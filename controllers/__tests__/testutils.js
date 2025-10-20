@@ -2,7 +2,7 @@ import express from "express";
 
 /**
  * 
- * @param {[string, string, (req, res) => Promise<any>][]} controllers
+ * @param {[string, string, (req, res) => Promise<any>, any[]?][]} controllers
  * @param {*} options 
  * @returns app
  */
@@ -22,8 +22,13 @@ export function createExpressTestController(controllers, options = {}) {
     next();
   });
 
-  for (const [method, path, handler] of controllers) {
-    app[method](path, handler);
+  for (const controller of controllers) {
+    const [method, path, handler, middlewares = []] = controller;
+    if (middlewares.length > 0) {
+      app[method](path, ...middlewares, handler);
+    } else {
+      app[method](path, handler);
+    }
   }
 
 

@@ -32,6 +32,8 @@ app.get('/', (req,res) => {
     res.send("<h1>Welcome to ecommerce app</h1>");
 });
 
+const PORT = 6060
+
 export default app;
 
 if (process.env.NODE_ENV !== 'test') {

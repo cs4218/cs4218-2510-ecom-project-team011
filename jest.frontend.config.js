@@ -26,6 +26,11 @@ export default {
     "<rootDir>/client/src/components/**/*.test.js",
   ],
 
+  // exclude integration tests
+  testPathIgnorePatterns: [
+    "\\.playwright\\.test\\.js$"
+  ],
+
   // jest code coverage
   collectCoverage: true,
   collectCoverageFrom: [

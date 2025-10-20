@@ -1,13 +1,21 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
+import "@testing-library/jest-dom";
 import axios from "axios";
 import CategoryProduct from "./CategoryProduct";
+import toast from "react-hot-toast";
+import { CartProvider } from "../context/cart";
 import Layout from "../components/Layout";
 
 const mockNavigate = jest.fn();
 
 jest.mock("axios");
+jest.mock("react-hot-toast", () => ({
+  success: jest.fn(),
+}));
 jest.mock("react-router-dom", () => ({
+  ...jest.requireActual("react-router-dom"),
   useParams: () => ({ slug: "test-product" }),
   useNavigate: () => mockNavigate,
 }));
@@ -18,8 +26,36 @@ jest.mock("./../components/Layout", () => {
   };
 });
 
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: jest.fn((key) => store[key] || null),
+    setItem: jest.fn((key, value) => {
+      store[key] = value.toString();
+    }),
+    clear: () => {
+      store = {};
+    },
+  };
+})();
+Object.defineProperty(window, "localStorage", {
+  value: localStorageMock,
+});
+
+const renderWithProviders = (ui) => {
+  return render(
+    <CartProvider>
+      <MemoryRouter initialEntries={["/category/test-product"]}>
+        <Routes>
+          <Route path="/category/:slug" element={ui} />
+        </Routes>
+      </MemoryRouter>
+    </CartProvider>
+  );
+};
+
 // Generated with the help of AI (ChatGPT and Github Copilot)
-describe("ProductDetails", () => {
+describe("CategoryProduct", () => {
   // Arrange
   const mockCategory = {
     isActive: true,
@@ -28,6 +64,36 @@ describe("ProductDetails", () => {
     _id: "id-1",
   };
   const mockProducts = [
+    {
+      name: "Computer",
+      slug: "computer",
+      // 61 characters, so should be truncated with ellipses
+      description:
+        "0123456789012345678901234567890123456789012345678901234567890",
+      price: 500,
+      category: mockCategory,
+      quantity: 5,
+      photo: {
+        data: "mockdata2",
+        contentType: "image/png",
+      },
+      shipping: false,
+    },
+    {
+      name: "Laptop",
+      slug: "laptop",
+      // 60 characters, so should not be truncated
+      description:
+        "012345678901234567890123456789012345678901234567890123456789",
+      price: 999,
+      category: mockCategory,
+      quantity: 5,
+      photo: {
+        data: "mockdata2",
+        contentType: "image/png",
+      },
+      shipping: false,
+    },
     {
       name: "Smartphone",
       slug: "smartphone",
@@ -40,34 +106,6 @@ describe("ProductDetails", () => {
         contentType: "image/jpeg",
       },
       shipping: true,
-    },
-    {
-      name: "Laptop",
-      slug: "laptop",
-      // 60 characters, so should not be truncated
-      description: "012345678901234567890123456789012345678901234567890123456789",
-      price: 999,
-      category: mockCategory,
-      quantity: 5,
-      photo: {
-        data: "mockdata2",
-        contentType: "image/png",
-      },
-      shipping: false,
-    },
-    {
-      name: "Computer",
-      slug: "computer",
-      // 61 characters, so should be truncated with ellipses
-      description: "0123456789012345678901234567890123456789012345678901234567890",
-      price: 500,
-      category: mockCategory,
-      quantity: 5,
-      photo: {
-        data: "mockdata2",
-        contentType: "image/png",
-      },
-      shipping: false,
     },
   ];
 
@@ -99,7 +137,7 @@ describe("ProductDetails", () => {
 
   it("should render properly", async () => {
     // Act
-    render(<CategoryProduct />);
+    renderWithProviders(<CategoryProduct />);
 
     // Assert
     await waitFor(() => {
@@ -126,23 +164,23 @@ describe("ProductDetails", () => {
 
   it("should render descriptions of different length properly", async () => {
     // Act
-    render(<CategoryProduct />);
+    renderWithProviders(<CategoryProduct />);
 
     // Assert
     await waitFor(() => {
-      // shorter descriptions should be rendered in full
-      expect(screen.getByText(mockProducts[0].description)).toBeInTheDocument();
-      expect(screen.getByText(mockProducts[1].description)).toBeInTheDocument();
       // very long descriptions should not be rendered in full; rendered with ellipses
       expect(
-        screen.getByText(mockProducts[2].description.substring(0, 60) + "...")
+        screen.getByText(mockProducts[0].description.substring(0, 60) + "...")
       ).toBeInTheDocument();
+      // shorter descriptions should be rendered in full
+      expect(screen.getByText(mockProducts[1].description)).toBeInTheDocument();
+      expect(screen.getByText(mockProducts[2].description)).toBeInTheDocument();
     });
   });
 
   it("should redirect to the appropriate url when more details is clicked", async () => {
     // Act
-    render(<CategoryProduct />);
+    renderWithProviders(<CategoryProduct />);
 
     // Assert
     await waitFor(() => {
@@ -162,5 +200,27 @@ describe("ProductDetails", () => {
         `/product/${mockProducts[1].slug}`
       );
     });
+  });
+
+  it("should add item to cart when 'ADD TO CART' is clicked", async () => {
+    // Act
+    renderWithProviders(<CategoryProduct />);
+
+    const addToCartButtons = await screen.findAllByRole("button", {
+      name: /ADD TO CART/i,
+    });
+
+    fireEvent.click(addToCartButtons[1]);
+
+    // Assert
+    expect(toast.success).toHaveBeenCalledWith("Item Added to cart");
+    expect(toast.success).toHaveBeenCalledTimes(1);
+
+    const expectedCart = [mockProducts[1]];
+    expect(localStorageMock.setItem).toHaveBeenCalledWith(
+      "cart",
+      JSON.stringify(expectedCart)
+    );
+    expect(localStorageMock.setItem).toHaveBeenCalledTimes(1);
   });
 });
