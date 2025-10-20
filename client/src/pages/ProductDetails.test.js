@@ -1,13 +1,21 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
+import "@testing-library/jest-dom";
 import axios from "axios";
 import ProductDetails from "./ProductDetails";
+import toast from "react-hot-toast";
+import { CartProvider } from "../context/cart";
 import Layout from "../components/Layout";
 
 const mockNavigate = jest.fn();
 
 jest.mock("axios");
+jest.mock("react-hot-toast", () => ({
+  success: jest.fn(),
+}));
 jest.mock("react-router-dom", () => ({
+  ...jest.requireActual("react-router-dom"),
   useParams: () => ({ slug: "test-product" }),
   useNavigate: () => mockNavigate,
 }));
@@ -17,6 +25,34 @@ jest.mock("./../components/Layout", () => {
     return <div data-testid="layout">{children}</div>;
   };
 });
+
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: jest.fn((key) => store[key] || null),
+    setItem: jest.fn((key, value) => {
+      store[key] = value.toString();
+    }),
+    clear: () => {
+      store = {};
+    },
+  };
+})();
+Object.defineProperty(window, "localStorage", {
+  value: localStorageMock,
+});
+
+const renderWithProviders = (ui) => {
+  return render(
+    <CartProvider>
+      <MemoryRouter initialEntries={["/category/test-product"]}>
+        <Routes>
+          <Route path="/category/:slug" element={ui} />
+        </Routes>
+      </MemoryRouter>
+    </CartProvider>
+  );
+};
 
 // Generated with the help of AI (ChatGPT and Github Copilot)
 describe("ProductDetails", () => {
@@ -110,7 +146,7 @@ describe("ProductDetails", () => {
 
   it("should render properly", async () => {
     // Act
-    render(<ProductDetails />);
+    renderWithProviders(<ProductDetails />);
 
     // Assert
     await waitFor(() => {
@@ -121,7 +157,7 @@ describe("ProductDetails", () => {
 
   it("should render descriptions of different length properly", async () => {
     // Act
-    render(<ProductDetails />);
+    renderWithProviders(<ProductDetails />);
 
     // Assert
     await waitFor(() => {
@@ -137,7 +173,7 @@ describe("ProductDetails", () => {
 
   it("should redirect to the appropriate url when more details is clicked", async () => {
     // Act
-    render(<ProductDetails />);
+    renderWithProviders(<ProductDetails />);
 
     // Assert
     await waitFor(() => {
@@ -157,5 +193,27 @@ describe("ProductDetails", () => {
         `/product/${mockProducts[1].slug}`
       );
     });
+  });
+
+  it("should add item to cart when 'ADD TO CART' is clicked", async () => {
+    // Act
+    renderWithProviders(<ProductDetails />);
+
+    const addToCartButtons = await screen.findAllByRole("button", {
+      name: /ADD TO CART/i,
+    });
+
+    fireEvent.click(addToCartButtons[0]);
+
+    // Assert
+    expect(toast.success).toHaveBeenCalledWith("Item Added to cart");
+    expect(toast.success).toHaveBeenCalledTimes(1);
+
+    const expectedCart = [mockProduct];
+    expect(localStorageMock.setItem).toHaveBeenCalledWith(
+      "cart",
+      JSON.stringify(expectedCart)
+    );
+    expect(localStorageMock.setItem).toHaveBeenCalledTimes(1);
   });
 });

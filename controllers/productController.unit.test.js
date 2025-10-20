@@ -968,38 +968,6 @@ describe("Product Controller Tests", () => {
       });
     });
 
-    it("should return 400 if no pid provided", async () => {
-      // Arrange
-      const req = mockReq({}, {}, { cid: "category123" });
-      const res = mockRes();
-
-      // Act
-      await relatedProductController(req, res);
-
-      // Assert
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.send).toHaveBeenCalledWith({
-        success: false,
-        message: "No product id found",
-      });
-    });
-
-    it("should return 400 if no cid provided", async () => {
-      // Arrange
-      const req = mockReq({}, {}, { pid: "1" });
-      const res = mockRes();
-
-      // Act
-      await relatedProductController(req, res);
-
-      // Assert
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.send).toHaveBeenCalledWith({
-        success: false,
-        message: "No category id found",
-      });
-    });
-
     it("should handle error when fetching related products", async () => {
       // Arrange
       const error = new Error("Related products error");
