@@ -62,7 +62,7 @@ export const createProductController = async (req, res) => {
         });
     }
 
-    const products = new productModel({ ...req.fields, slug: slugify(name) });
+    const products = new productModel({ ...req.fields, slug: slugify(name, { lower: true }) });
     if (photo) {
       products.photo.data = fs.readFileSync(photo.path);
       products.photo.contentType = photo.type;
@@ -240,7 +240,7 @@ export const updateProductController = async (req, res) => {
 
     const products = await productModel.findByIdAndUpdate(
       req.params.pid,
-      { ...req.fields, slug: slugify(name) },
+      { ...req.fields, slug: slugify(name, { lower: true }) },
       { new: true }
     );
 

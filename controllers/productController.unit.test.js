@@ -75,7 +75,7 @@ const {
   productListController,
   braintreeTokenController,
   brainTreePaymentController,
-} = require("../controllers/productController");
+} = require("./productController");
 
 // Test helpers
 const mockReq = (

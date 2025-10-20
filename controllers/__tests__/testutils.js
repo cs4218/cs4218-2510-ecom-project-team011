@@ -1,4 +1,5 @@
 import express from "express";
+import formidable from "express-formidable";
 
 /**
  * 
@@ -14,6 +15,8 @@ export function createExpressTestController(controllers, options = {}) {
 
   const app = express();
   app.use(express.json());
+  // Enable multipart/form-data parsing so req.fields/req.files are available
+  app.use(formidable());
 
   // Fake auth middleware
   app.use((req, res, next) => {
