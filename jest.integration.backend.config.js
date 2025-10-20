@@ -1,37 +1,24 @@
 export default {
-  // name displayed during tests
+  // display name
   displayName: "integration (backend)",
 
-  // simulates browser environment in jest
-  // e.g., using document.querySelector in your tests
+  // when testing backend
   testEnvironment: "node",
 
-  // jest does not recognise jsx files by default, so we use babel to transform any jsx files
-  transform: {
-    "^.+\\.jsx?$": "babel-jest",
-  },
-
-  // tells jest how to handle css/scss imports in your tests
-  moduleNameMapper: {
-    "\\.(css|scss)$": "identity-obj-proxy",
-  },
-
-  // ignore all node_modules except styleMock (needed for css imports)
-  transformIgnorePatterns: ["/node_modules/(?!(styleMock\\.js)$)"],
-
-  // only run these tests
+  // which test to run
   testMatch: [
-    "<rootDir>/**/*.integration.test.js",
-    "<rootDir>/**/*.i.test.js",
+    "<rootDir>/controllers/*.integration.test.js",
+    "<rootDir>/helpers/*.integration.test.js",
+    "<rootDir>/middlewares/*.integration.test.js",
+    "<rootDir>/config/*.integration.test.js"
   ],
 
   // jest code coverage
   collectCoverage: false,
   // collectCoverageFrom: [
-  //   "client/src/pages/**",
-  //   "client/src/pages/Auth/**",
-  //   "client/src/context/**",
-  //   "client/src/components/**",
+  //   "controllers/**",
+  //   "helpers/**",
+  //   "middlewares/**"
   // ],
   // coverageThreshold: {
   //   global: {
@@ -39,5 +26,4 @@ export default {
   //     functions: 100,
   //   },
   // },
-  setupFilesAfterEnv: ["<rootDir>/client/src/setupTests.js"],
 };
