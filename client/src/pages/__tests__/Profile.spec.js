@@ -1,6 +1,5 @@
 import { 
   testUser,
-  testAsSomeone, 
   testAsUser, 
   testAsLoggedOut, 
   expect
@@ -70,6 +69,19 @@ testAsUser.describe('Profile editing (authenticated user)', () => {
     await expect(page.getByText(/6/)).toBeVisible();
   });
   
+  testAsUser('submits change successfully', async ({ page }) => {
+    await page.goto('/dashboard/user/');
+    await page.getByRole('link', { name: 'Profile' }).click();;
+    
+    const {passwordInput} = getInputs(page);
+    
+    // Clear + enter values
+    await passwordInput.fill('1234567');
+    
+    await page.getByRole('button', { name: 'UPDATE' }).click();
+    
+    await expect(page.getByText('Profile Updated Successfully')).toBeVisible();
+  });
   
   
 });
@@ -86,14 +98,14 @@ testAsUser.describe('Orders page (authenticated user)', () => {
   testAsUser('shows list of user orders', async ({ page }) => {
     await page.goto('/dashboard/user/');
     await page.getByRole('link', { name: 'Orders' }).click();
-        
+    
     await expect(page.getByRole('cell', { name: testUserOrder.status })).toBeVisible();
     await expect(page.getByRole('cell', { name: testUserOrder.buyer })).toBeVisible();
     await expect(page.getByRole('cell', { name: testUserOrder.payment })).toBeVisible();
     await expect(page.getByRole('cell', { name: testUserOrder.items })).toBeVisible();
     
     const rows = await page.locator("tbody tr").all()
-
+    
     // Expect at least one order row (adjust selector as needed)
     await expect(rows.length).toBeGreaterThan(0);
   });
