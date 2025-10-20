@@ -9,7 +9,7 @@ describe("connectDB Integration Tests", () => {
     consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
     // Change NODE_ENV to development for all tests in this suite
     originalNodeEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    process.env.NODE_ENV = 'test';
   });
 
   afterAll(async () => {
@@ -41,7 +41,7 @@ describe("connectDB Integration Tests", () => {
     const logMessage = consoleSpy.mock.calls[0][0];
     
     // Should either log success or error message
-    expect(logMessage).toMatch(/Connected To Mongodb Database/);
+    expect(logMessage).toMatch(/Connected To Test Database: test_0/);
     expect(mongoose.connection.readyState).toBe(1); // 1 = connected
   }, 15000);
 

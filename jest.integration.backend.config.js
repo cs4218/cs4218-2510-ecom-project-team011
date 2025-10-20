@@ -1,3 +1,8 @@
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
+
 export default {
   // name displayed during tests
   displayName: "integration (backend)",
