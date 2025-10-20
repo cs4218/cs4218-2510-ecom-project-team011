@@ -28,7 +28,7 @@ export default {
 
   // exclude integration tests
   testPathIgnorePatterns: [
-    "\\.integration\\.test\\.js$"
+    "\\.playwright\\.test\\.js$"
   ],
 
   // jest code coverage
