@@ -3,14 +3,21 @@ import connectDB from "./db";
 
 describe("connectDB Integration Tests", () => {
   let consoleSpy;
+  let originalNodeEnv;
 
   beforeAll(() => {
     consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    // Change NODE_ENV to development for all tests in this suite
+    originalNodeEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
   });
 
   afterAll(async () => {
     // Clean up
     consoleSpy.mockRestore();
+    
+    // Restore original NODE_ENV
+    process.env.NODE_ENV = originalNodeEnv;
     
     // Close any open connections
     if (mongoose.connection.readyState !== 0) {
