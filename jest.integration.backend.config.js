@@ -25,6 +25,12 @@ export default {
     "<rootDir>/**/*.i.test.js",
   ],
 
+  // exclude these test
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/client/"
+  ],
+
   // jest code coverage
   collectCoverage: false,
   // collectCoverageFrom: [
