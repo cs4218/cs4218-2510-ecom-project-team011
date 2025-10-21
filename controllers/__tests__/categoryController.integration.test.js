@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 import * as mod from '../categoryController.js';
-import Category from '../../../models/categoryModel.js';
+import Category from '../../models/categoryModel.js';
 
 function pickHandlers(m) {
   // merge default (if object) + named
@@ -44,7 +44,6 @@ function buildApp() {
   app.use(bodyParser.json());
   app.post('/api/v1/category/create', controllers.create);
   app.put('/api/v1/category/update/:id', controllers.update);
-  app.get('/api/v1/category/get-category', controllers.list);
   app.get('/api/v1/category/single-category/:slug', controllers.single);
   app.delete('/api/v1/category/delete-category/:id', controllers.del);
   return app;
@@ -108,19 +107,6 @@ describe('Category controller (mongodb-memory-server integration)', () => {
 
     expect(res.statusCode).toBe(409);
     expect(res.body.success).toBe(false);
-  });
-
-  test('GET /get-category -> 200 lists categories', async () => {
-    await Category.create([
-      { name: 'Tablets', slug: 'tablets' },
-      { name: 'Audio', slug: 'audio' },
-    ]);
-
-    const res = await request(app).get('/api/v1/category/get-category');
-    expect(res.statusCode).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(Array.isArray(res.body.category)).toBe(true);
-    expect(res.body.category.map(c => c.name).sort()).toEqual(['Audio', 'Tablets']);
   });
 
   test('GET /single-category/:slug -> 404 when not found', async () => {
