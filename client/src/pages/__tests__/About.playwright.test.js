@@ -56,109 +56,125 @@ test.describe("About Page", () => {
     });
   });
 
-  test.describe("Integration Tests with Header Component", () => {
-      test("should navigate to home when brand logo is clicked", async ({ page }) => {
-        await page.getByRole("link", { name: "🛒 Virtual Vault" }).click();
-        await expect(page).toHaveURL("/");
-      });
+  test.describe("Header Component Tests", () => {
+    test("should navigate to home when brand logo is clicked", async ({ page }) => {
+      await page.getByRole("link", { name: "🛒 Virtual Vault" }).click();
+      await expect(page).toHaveURL("/");
+    });
 
-      test("should navigate to home page when Home link is clicked", async ({ page }) => {
-        await page.getByRole("link", { name: "Home" }).click();
-        await expect(page).toHaveURL("/");
-      });
+    test("should navigate to home page when Home link is clicked", async ({ page }) => {
+      await page.getByRole("link", { name: "Home" }).click();
+      await expect(page).toHaveURL("/");
+    });
 
-      test("should show dropdown menu when Categories is clicked", async ({ page }) => {
-        await page.getByRole("link", { name: "Categories" }).click();
-        await expect(page.getByText("All Categories")).toBeVisible();
-      });
+    test("should show dropdown menu when Categories is clicked", async ({ page }) => {
+      await page.getByRole("link", { name: "Categories" }).click();
+      await expect(page.getByText("All Categories")).toBeVisible();
+    });
 
-      test("should navigate to categories page when All Categories is clicked", async ({ page }) => {
-        await page.getByRole("link", { name: "Categories" }).click();
-        await page.getByRole("link", { name: "All Categories" }).click();
-        await expect(page).toHaveURL(/.*categories/);
-      });
+    test("should navigate to categories page when All Categories is clicked", async ({ page }) => {
+      await page.getByRole("link", { name: "Categories" }).click();
+      await page.getByRole("link", { name: "All Categories" }).click();
+      await expect(page).toHaveURL(/.*categories/);
+    });
 
-      test("should navigate to cart page when Cart link is clicked", async ({ page }) => {
-        await page.getByRole("link", { name: "Cart" }).click();
-        await expect(page).toHaveURL(/.*cart/);
-      });
+    test("should navigate to cart page when Cart link is clicked", async ({ page }) => {
+      await page.getByRole("link", { name: "Cart" }).click();
+      await expect(page).toHaveURL(/.*cart/);
+    });
+    
+    test("should navigate to register page when Register link is clicked", async ({ page }) => {
+      await page.getByRole("link", { name: "Register" }).click();
+      await expect(page).toHaveURL(/.*register/);
+    });
+
+    test("should navigate to login page when Login link is clicked", async ({ page }) => {
+      await page.getByRole("link", { name: "Login" }).click();
+      await expect(page).toHaveURL(/.*login/);
+    });
+
+    test("should allow typing in search input", async ({ page }) => {
+      const searchInput = page.locator('input[type="search"], input[placeholder*="search" i]').first();
+      await searchInput.fill("test search");
+      await expect(searchInput).toHaveValue("test search");
+    });
+
+    test("should clear search input when cleared", async ({ page }) => {
+      const searchInput = page.locator('input[type="search"], input[placeholder*="search" i]').first();
+      await searchInput.fill("test");
+      await searchInput.clear();
+      await expect(searchInput).toHaveValue("");
+    });
+
+    test("should preserve header functionality across page navigation", async ({ page }) => {
+      await page.getByRole("link", { name: "Cart" }).click();
+      await expect(page).toHaveURL(/.*cart/);
+      await page.goBack();
       
-      test("should navigate to register page when Register link is clicked", async ({ page }) => {
-        await page.getByRole("link", { name: "Register" }).click();
-        await expect(page).toHaveURL(/.*register/);
-      });
+      // Header should still be functional
+      await page.getByRole("link", { name: "Home" }).click();
+      await expect(page).toHaveURL("/");
+    });
 
-      test("should navigate to login page when Login link is clicked", async ({ page }) => {
-        await page.getByRole("link", { name: "Login" }).click();
-        await expect(page).toHaveURL(/.*login/);
-      });
+    test("should navigate using keyboard tab navigation", async ({ page }) => {
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Enter");
+      
+      // Should navigate to the focused link
+      await expect(page).toHaveURL("/");
+    });
 
-      test("should allow typing in search input", async ({ page }) => {
-        const searchInput = page.locator('input[type="search"], input[placeholder*="search" i]').first();
-        await searchInput.fill("test search");
-        await expect(searchInput).toHaveValue("test search");
-      });
+    test("should maintain navigation functionality after page refresh", async ({ page }) => {
+      await page.reload();
+      
+      // Navigation should still work after refresh
+      await page.getByRole("link", { name: "Home" }).click();
+      await expect(page).toHaveURL("/");
+    });
+  });
 
-      test("should clear search input when cleared", async ({ page }) => {
-        const searchInput = page.locator('input[type="search"], input[placeholder*="search" i]').first();
-        await searchInput.fill("test");
-        await searchInput.clear();
-        await expect(searchInput).toHaveValue("");
-      });
+  test.describe("Footer Component Tests", () => {
+    test("should display footer content", async ({ page }) => {
+      await expect(page.getByText("All Rights Reserved")).toBeVisible();
+      await expect(page.getByText("About")).toBeVisible();
+      await expect(page.getByText("Contact")).toBeVisible();
+      await expect(page.getByText("Privacy Policy")).toBeVisible();
+    });
 
-      test("should maintain navigation state when returning to about page", async ({ page }) => {
-        // Navigate away and back
-        await page.getByRole("link", { name: "Home" }).click();
-        await page.goto("/about");
-        
-        // Navigation should still work - hover to show dropdown then click All Categories
-        await page.getByRole("link", { name: "Categories" }).click();
-        await page.getByRole("link", { name: "All Categories" }).click();
-        await expect(page).toHaveURL(/.*categories/);
-      });
+    test("should navigate to about page when About link is clicked", async ({ page }) => {
+      await page.getByRole("link", { name: "About" }).click();
+      await expect(page).toHaveURL(/.*about/);
+    });
 
-      test("should preserve header functionality across page navigation", async ({ page }) => {
-        // Test navigation from about page
-        await page.getByRole("link", { name: "Cart" }).click();
-        await expect(page).toHaveURL(/.*cart/);
-        
-        // Navigate back to about
-        await page.goto("/about");
-        
-        // Header should still be functional
-        await page.getByRole("link", { name: "Home" }).click();
-        await expect(page).toHaveURL("/");
-      });
+    test("should navigate to contact page when Contact link is clicked", async ({ page }) => {
+      await page.getByRole("link", { name: "Contact" }).click();
+      await expect(page).toHaveURL(/.*contact/);
+    });
 
-      test("should navigate using keyboard tab navigation", async ({ page }) => {
-        await page.keyboard.press("Tab");
-        await page.keyboard.press("Tab");
-        await page.keyboard.press("Tab");
-        await page.keyboard.press("Tab");
-        await page.keyboard.press("Enter");
-        
-        // Should navigate to the focused link
-        await expect(page).toHaveURL("/");
-      });
+    test("should navigate to policy page when Privacy Policy link is clicked", async ({ page }) => {
+      await page.getByRole("link", { name: "Privacy Policy" }).click();
+      await expect(page).toHaveURL(/.*policy/);
+    });
 
-      test("should handle navigation when links are clicked rapidly", async ({ page }) => {
-        // Rapid clicking should not break navigation
-        await page.getByRole("link", { name: "Home" }).click();
-        await page.goto("/about");
-        await page.getByRole("link", { name: "Categories" }).click();
-        await page.goto("/about");
-        await page.getByRole("link", { name: "Cart" }).click();
-        
-        // Should end up on cart page
-        await expect(page).toHaveURL(/.*cart/);
-      });
+    test("should maintain footer functionality across page navigation", async ({ page }) => {
+      await page.getByRole("link", { name: "Contact" }).click();
+      await expect(page).toHaveURL(/.*contact/);
+      await page.goBack();
+      
+      // Footer should still be functional
+      await page.getByRole("link", { name: "Privacy Policy" }).click();
+      await expect(page).toHaveURL(/.*policy/);
+    });
 
-      test("should maintain navigation functionality after page refresh", async ({ page }) => {
-        await page.reload();
-        
-        // Navigation should still work after refresh
-        await page.getByRole("link", { name: "Home" }).click();
-        await expect(page).toHaveURL("/");
+    test("should handle footer navigation after page refresh", async ({ page }) => {
+      await page.reload();
+      
+      // Footer navigation should still work after refresh
+      await page.getByRole("link", { name: "Contact" }).click();
+      await expect(page).toHaveURL(/.*contact/);
     });
   });
 });
