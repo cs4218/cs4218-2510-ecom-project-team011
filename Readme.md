@@ -1,3 +1,14 @@
+# Milestone 2
+## Assigned Work
+| Name | Frontend | Backend |
+| - | - | - |
+| Tham You Wei | pages/About.js, pages/Pagenotfound.js, pages/admin/Users.js, pages/Search.js, pages/admin/Products.js | config/db.js, controllers/productController.js (createProductController, deleteProductController, updateProductController) |
+| Chun Jie | components/Routes/Private.js, components/UserMenu.js, pages/user/Dashboard.js, pages/user/Orders.js, pages/user/Profile.js | controllers/authController.js (updateProfileController, getOrdersController, getAllOrdersController), middlewares/authMiddleware.js |
+| Sean Teh | pages/Contact.js, pages/Policy.js, pages/ProductDetails.js, pages/CategoryProduct.js,  | controllers/productController.js (getProductController, getSingleProductController, productPhotoController, productFiltersController, productCountController, productListController, searchProductController, relatedProductController, productCategoryController), models/productModel.js |
+| Leon | pages/Homepage.js, hooks/useCategory.js, pages/Categories.js | controllers/categoryController.js (categoryController & singleCategoryController), controllers/productController.js (brantreeTokenController & brainTreePaymentController), models/categoryModel.js|
+| Arushi | pages/Auth/Register.js, pages/Auth/Login.js, components/AdminMenu.js, pages/admin/AdminDashboard.js, pages/admin/CreateProduct.js, pages/admin/CreateCategory.js, pages/admin/UpdateProduct.js, pages/admin/AdminOrders.js | controllers/authController.js (registerController, loginController, forgotPaswordController, testController), controllers/categoryController.js (createCategoryController, updateCategoryController, deleteCategoryController) |
+
+
 # Milestone 1 
 ## Group 11 Week 5 Lab Link:
 https://github.com/cs4218/cs4218-2510-ecom-project-team011/actions/runs/17602852868/job/50008042867
