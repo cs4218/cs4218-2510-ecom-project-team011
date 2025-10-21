@@ -39,7 +39,7 @@ describe("updateProfileController", () => {
       ["put", "/", updateProfileController]
     ], {
       user
-    })
+    })   
     
     const updatedUser = {
       ...user,
@@ -60,7 +60,7 @@ describe("updateProfileController", () => {
       mongoServer.stop()
     }
     
-  }, 20000)
+  })
   
   it("rejects too short passwords", async () => {
     const mongoServer = await MongoMemoryServer.create()
