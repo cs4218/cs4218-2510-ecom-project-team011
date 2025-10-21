@@ -6,7 +6,7 @@ test.describe("About Page", () => {
     await page.goto("/about");
   });
 
-  test.describe("Page Loading and Navigation", () => {
+  test.describe("Native Component Tests", () => {
     test("should load About page successfully", async ({ page }) => {
       await expect(page).toHaveTitle("About us - Ecommerce app");
       await expect(page.locator("main")).toBeVisible();
@@ -21,9 +21,7 @@ test.describe("About Page", () => {
         await expect(page).toHaveTitle("About us - Ecommerce app");
       }
     });
-  });
 
-  test.describe("Content Visibility", () => {
     test("should display about image", async ({ page }) => {
       const aboutImage = page.locator('img[alt="contactus"]');
       await expect(aboutImage).toBeVisible();
@@ -38,17 +36,6 @@ test.describe("About Page", () => {
       await expect(page.locator('img[alt="contactus"]')).toBeVisible();
       await expect(page.locator("text=Add text")).toBeVisible();
     });
-  });
-
-  test.describe("User Interactions", () => {
-    test("should allow keyboard navigation", async ({ page }) => {
-      await page.keyboard.press("Tab");
-      await page.keyboard.press("Tab");
-      await page.keyboard.press("Tab");
-      
-      // Page should remain functional after keyboard navigation
-      await expect(page.locator("main")).toBeVisible();
-    });
 
     test("should be scrollable", async ({ page }) => {
       await page.mouse.wheel(0, 100);
@@ -57,9 +44,7 @@ test.describe("About Page", () => {
       // Content should still be visible after scrolling
       await expect(page.locator('img[alt="contactus"]')).toBeVisible();
     });
-  });
 
-  test.describe("Error Handling", () => {
     test("should handle page load errors gracefully", async ({ page }) => {
       // Simulate network issues by blocking the image
       await page.route("**/images/about.jpeg", route => route.abort());
@@ -71,15 +56,12 @@ test.describe("About Page", () => {
     });
   });
 
-  test.describe("Header Component Works in About Page", () => {
-    test.describe("Brand Navigation", () => {
+  test.describe("Integration Tests with Header Component", () => {
       test("should navigate to home when brand logo is clicked", async ({ page }) => {
         await page.getByRole("link", { name: "🛒 Virtual Vault" }).click();
         await expect(page).toHaveURL("/");
       });
-    });
 
-    test.describe("Main Navigation Interactions", () => {
       test("should navigate to home page when Home link is clicked", async ({ page }) => {
         await page.getByRole("link", { name: "Home" }).click();
         await expect(page).toHaveURL("/");
@@ -100,9 +82,7 @@ test.describe("About Page", () => {
         await page.getByRole("link", { name: "Cart" }).click();
         await expect(page).toHaveURL(/.*cart/);
       });
-    });
-
-    test.describe("Authentication Navigation", () => {
+      
       test("should navigate to register page when Register link is clicked", async ({ page }) => {
         await page.getByRole("link", { name: "Register" }).click();
         await expect(page).toHaveURL(/.*register/);
@@ -112,9 +92,7 @@ test.describe("About Page", () => {
         await page.getByRole("link", { name: "Login" }).click();
         await expect(page).toHaveURL(/.*login/);
       });
-    });
 
-    test.describe("Search Functionality", () => {
       test("should allow typing in search input", async ({ page }) => {
         const searchInput = page.locator('input[type="search"], input[placeholder*="search" i]').first();
         await searchInput.fill("test search");
@@ -127,9 +105,7 @@ test.describe("About Page", () => {
         await searchInput.clear();
         await expect(searchInput).toHaveValue("");
       });
-    });
 
-    test.describe("Navigation State Management", () => {
       test("should maintain navigation state when returning to about page", async ({ page }) => {
         // Navigate away and back
         await page.getByRole("link", { name: "Home" }).click();
@@ -153,9 +129,7 @@ test.describe("About Page", () => {
         await page.getByRole("link", { name: "Home" }).click();
         await expect(page).toHaveURL("/");
       });
-    });
 
-    test.describe("Keyboard Navigation", () => {
       test("should navigate using keyboard tab navigation", async ({ page }) => {
         await page.keyboard.press("Tab");
         await page.keyboard.press("Tab");
@@ -166,9 +140,7 @@ test.describe("About Page", () => {
         // Should navigate to the focused link
         await expect(page).toHaveURL("/");
       });
-    });
 
-    test.describe("Other Miscellaneous Tests", () => {
       test("should handle navigation when links are clicked rapidly", async ({ page }) => {
         // Rapid clicking should not break navigation
         await page.getByRole("link", { name: "Home" }).click();
@@ -187,7 +159,6 @@ test.describe("About Page", () => {
         // Navigation should still work after refresh
         await page.getByRole("link", { name: "Home" }).click();
         await expect(page).toHaveURL("/");
-      });
     });
   });
 });
