@@ -137,6 +137,52 @@ test.describe("Users Page", () => {
     });
   });
 
+  test.describe("Spinner Interaction Test", () => {
+    test("should show spinner while loading and then route to users page", async ({ page }) => {
+      // Mock admin authentication with delay to simulate API call and induce a spinner
+      await page.addInitScript(() => {
+        localStorage.setItem('auth', JSON.stringify({
+          user: {
+            _id: "admin123",
+            name: "Admin User",
+            email: "admin@example.com",
+            role: 1
+          },
+          token: "admin-jwt-token"
+        }));
+      });
+
+      // Mock the admin authentication API endpoint with delay
+      await page.route("**/api/v1/auth/admin-auth", async (route) => {
+        // Add delay to simulate API call time
+        await new Promise(resolve => setTimeout(resolve, 100));
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            ok: true,
+            message: "Admin authenticated successfully"
+          })
+        });
+      });
+
+      // Navigate to users page and verify spinner behavior
+      await page.goto("/dashboard/admin/users");
+      
+      // Check that spinner is visible during loading
+      await expect(page.getByRole("status")).toBeVisible();
+      await expect(page.getByText(/redirecting to you in/i)).toBeVisible();
+      
+      // Wait for spinner to disappear and page to load
+      await expect(page.getByRole("status")).not.toBeVisible();
+      
+      // Page should load successfully after spinner
+      await expect(page).toHaveTitle("Dashboard - All Users");
+      await expect(page.getByRole("heading", { name: "All Users" })).toBeVisible();
+      await expect(page.getByText("Admin Dashboard")).toBeVisible();
+    });
+  });
+
   test.describe("Admin Menu Integration", () => {
     test("should display admin menu items", async ({ page }) => {
       // Test that admin menu is visible and functional
