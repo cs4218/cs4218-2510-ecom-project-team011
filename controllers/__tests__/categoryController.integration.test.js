@@ -4,48 +4,26 @@ import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
-import * as mod from '../categoryController.js';
+import {
+  createCategoryController,
+  updateCategoryController,
+  categoryControlller,        
+  singleCategoryController,
+  deleteCategoryController,
+} from '../categoryController.js';
+
 import Category from '../../models/categoryModel.js';
-
-function pickHandlers(m) {
-  // merge default (if object) + named
-  const merged = {
-    ...(m.default && typeof m.default === 'object' ? m.default : {}),
-    ...m,
-  };
-
-  const pick = (...names) => names.map(n => merged[n]).find(fn => typeof fn === 'function');
-
-  const create = pick('createCategoryController', 'createCategory', 'create');
-  const update = pick('updateCategoryController', 'updateCategory', 'update');
-  const list   = pick('categoryControlller', 'categoryController', 'getAllCategory', 'getCategories', 'list');
-  const single = pick('singleCategoryController', 'getSingleCategory', 'single', 'read');
-  const del    = pick('deleteCategoryController', 'deleteCategory', 'remove', 'destroy');
-
-  const missing = [];
-  if (!create) missing.push('create');
-  if (!update) missing.push('update');
-  if (!list)   missing.push('list');
-  if (!single) missing.push('single');
-  if (!del)    missing.push('delete');
-
-  if (missing.length) {
-    throw new Error(
-      `Missing handlers: ${missing.join(', ')}. Available exports: ${Object.keys(merged).join(', ')}`
-    );
-  }
-  return { create, update, list, single, del };
-}
-
-const controllers = pickHandlers(mod);
 
 function buildApp() {
   const app = express();
   app.use(bodyParser.json());
-  app.post('/api/v1/category/create', controllers.create);
-  app.put('/api/v1/category/update/:id', controllers.update);
-  app.get('/api/v1/category/single-category/:slug', controllers.single);
-  app.delete('/api/v1/category/delete-category/:id', controllers.del);
+
+  app.post('/api/v1/category/create', createCategoryController);
+  app.put('/api/v1/category/update/:id', updateCategoryController);
+  app.get('/api/v1/category/get-category', categoryControlller);
+  app.get('/api/v1/category/single-category/:slug', singleCategoryController);
+  app.delete('/api/v1/category/delete-category/:id', deleteCategoryController);
+
   return app;
 }
 
@@ -107,6 +85,19 @@ describe('Category controller (mongodb-memory-server integration)', () => {
 
     expect(res.statusCode).toBe(409);
     expect(res.body.success).toBe(false);
+  });
+
+  test('GET /get-category -> 200 lists categories', async () => {
+    await Category.create([
+      { name: 'Tablets', slug: 'tablets' },
+      { name: 'Audio', slug: 'audio' },
+    ]);
+
+    const res = await request(app).get('/api/v1/category/get-category');
+    expect(res.statusCode).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.category)).toBe(true);
+    expect(res.body.category.map(c => c.name).sort()).toEqual(['Audio', 'Tablets']);
   });
 
   test('GET /single-category/:slug -> 404 when not found', async () => {
