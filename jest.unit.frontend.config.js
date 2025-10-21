@@ -50,6 +50,9 @@ export default {
     "\.playwright\.test\.js",
     "__tests__"
   ],
+
+  coverageDirectory: "coverage/frontend",
+
   // coverageThreshold: {
   //   global: {
   //     lines: 100,

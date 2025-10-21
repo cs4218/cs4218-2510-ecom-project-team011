@@ -28,14 +28,18 @@ export default {
     "helpers/**",
     "middlewares/**"
   ],
-    coveragePathIgnorePatterns: [
+  
+  coveragePathIgnorePatterns: [
     "/node_modules/",
     "\.integration\.test\.js",
     "\.i\.test\.js",
     "\.playwright\.test\.js",
-    "__tests__"
+    "__tests__",
+    "__atlas_tests__"
   ],
-
+  
+  coverageDirectory: "coverage/backend",
+  
   // coverageThreshold: {
   //   global: {
   //     lines: 100,
