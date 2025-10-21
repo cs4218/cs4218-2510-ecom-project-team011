@@ -54,10 +54,10 @@ describe("isAdmin middleware", () => {
     })
     
     const response = await request(app).get("/")
-
+    
     try {
-    expect(response.status).toBe(200)
-    expect(response.body.success).toBe(true)
+      expect(response.status).toBe(200)
+      expect(response.body.success).toBe(true)
     } finally {
       connection.close()
       mongoServer.stop()
@@ -73,4 +73,34 @@ describe("isAdmin middleware", () => {
     expect(response.status).toBe(401)
     expect(response.body.success).toBe(false)
   })
+  
+  it("rejects non-admin user", async () => {
+    
+    const mongoServer = await MongoMemoryServer.create()
+    const connection = mongoose.createConnection(mongoServer.getUri())
+    userModel.useConnection(connection)
+    const newId = new mongoose.Types.ObjectId()
+    const user = await new userModel({
+      _id: newId, name: "a", email: "a@a", role: 0, password: "12345", answer: "a", address: "a", phone: "a"
+    }).save()
+    
+    
+    const app = createExpressTestController([
+      ["get", "/", (req, res) => res.status(200).send({success: true,}), [isAdmin]]
+    ], {
+      user: {
+        _id: newId.valueOf()
+      }
+    })
+    
+    const response = await request(app).get("/")
+    try {
+    expect(response.status).toBe(401)
+    expect(response.body.success).toBe(false)
+    } finally {
+      connection.close()
+      mongoServer.stop()
+    }
+  })
+  
 })
