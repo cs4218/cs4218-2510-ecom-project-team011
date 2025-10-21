@@ -1,91 +1,139 @@
-import request from "supertest";
-import express from "express";
-import bodyParser from "body-parser";
+import request from 'supertest';
+import express from 'express';
+import bodyParser from 'body-parser';
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 
-const calls = { findOne: [], find: [], findByIdAndUpdate: [], findByIdAndDelete: [], saves: [] };
-let controllers;
 
-jest.unstable_mockModule("slugify", () => ({ default: (s) => (s || "").toLowerCase().replace(/\s+/g, "-") }));
+import * as categoryControllers from '../categoryController.js';
 
-jest.unstable_mockModule("../../models/categoryModel.js", () => {
-  return {
-    default: class Category {
-      constructor(doc) { this.doc = doc; }
-      async save() { calls.saves.push(this.doc); return { _id: "cNEW", ...this.doc }; }
-      static async findOne(q) {
-        calls.findOne.push(q);
-        if (q?.name === "Existing") return { _id: "cEXIST", name: "Existing", slug: "existing" };
-        if (q?.slug === "phones") return { _id: "c1", name: "Phones", slug: "phones" };
-        return null;
-      }
-      static async find() {
-        calls.find.push(true);
-        return [{ _id: "c1", name: "Phones", slug: "phones" }, { _id: "c2", name: "Laptops", slug: "laptops" }];
-      }
-      static async findByIdAndUpdate(id, update, opts) { calls.findByIdAndUpdate.push({ id, update, opts }); return { _id: id, ...update }; }
-      static async findByIdAndDelete(id) { calls.findByIdAndDelete.push(id); return { _id: id }; }
-    }
-  };
-});
+import Category from '../../models/categoryModel.js';
 
-const pick = (obj, keys) => keys.map(k => obj[k]).find(Boolean);
+const {
+  createCategoryController,
+  updateCategoryController,
+  categoryController,        
+  singleCategoryController, 
+  deleteCategoryController,
+} = categoryControllers;
 
-const makeApp = (controllers) => {
-  const app = express();
-  app.use(bodyParser.json());
-  const createHandler = pick(controllers, ["createCategoryController", "createCategory", "create"]);
-  const updateHandler = pick(controllers, ["updateCategoryController", "updateCategory", "update"]);
-  const listHandler   = pick(controllers, ["categoryController", "getAllCategory", "getCategories", "list"]);
-  const singleHandler = pick(controllers, ["singleCategoryController", "getSingleCategory", "single"]);
-  const deleteHandler = pick(controllers, ["deleteCategoryController", "deleteCategory", "remove"]);
-  app.post("/api/v1/category/create", createHandler);
-  app.put("/api/v1/category/update/:id", updateHandler);
-  app.get("/api/v1/category/get-category", listHandler);
-  app.get("/api/v1/category/single-category/:slug", singleHandler);
-  app.delete("/api/v1/category/delete-category/:id", deleteHandler);
-  return app;
-};
+let mongod;
+let app;
 
-describe("Category routes (integration)", () => {
-  let app;
+function buildApp() {
+  const a = express();
+  a.use(bodyParser.json());
+
+  a.post('/api/v1/category/create', createCategoryController);
+  a.put('/api/v1/category/update/:id', updateCategoryController);
+  a.get('/api/v1/category/get-category', categoryController);
+  a.get('/api/v1/category/single-category/:slug', singleCategoryController);
+  a.delete('/api/v1/category/delete-category/:id', deleteCategoryController);
+
+  return a;
+}
+
+describe('Category controller (mongodb-memory-server integration)', () => {
   beforeAll(async () => {
-    controllers = await import("../categoryController.js");
-    app = makeApp(controllers);
+    // Start in-memory Mongo
+    mongod = await MongoMemoryServer.create();
+    const uri = mongod.getUri();
+
+    // Connect mongoose
+    await mongoose.connect(uri, {
+      dbName: 'jest-category-tests',
+    });
+
+    // Build app after models are ready
+    app = buildApp();
   });
 
-  test("create category - success", async () => {
-    const res = await request(app).post("/api/v1/category/create").send({ name: "Tablets" });
-    expect(res.statusCode).toBeLessThan(400);
-    expect(res.body?.success ?? true).toBeTruthy();
+  afterAll(async () => {
+    // Close mongoose & stop in-memory server
+    await mongoose.connection.close();
+    if (mongod) await mongod.stop();
   });
 
-  test("create category - duplicate name", async () => {
-    const res = await request(app).post("/api/v1/category/create").send({ name: "Existing" });
-    expect([200,400,409]).toContain(res.statusCode);
+  beforeEach(async () => {
+    // Clean DB between tests
+    const { collections } = mongoose.connection;
+    for (const name of Object.keys(collections)) {
+      await collections[name].deleteMany({});
+    }
   });
 
-  test("list categories", async () => {
-    const res = await request(app).get("/api/v1/category/get-category");
+  test('POST /create -> creates a category (201)', async () => {
+    const res = await request(app)
+      .post('/api/v1/category/create')
+      .send({ name: 'Phones' });
+
+    expect([200, 201]).toContain(res.statusCode);
+    expect(res.body).toMatchObject({
+      success: true,
+    });
+
+    const saved = await Category.findOne({ name: 'Phones' });
+    expect(saved).toBeTruthy();
+    expect(saved.slug).toBe('phones'); 
+  });
+
+  test('POST /create -> rejects duplicate name (4xx)', async () => {
+    // Seed an existing category
+    await Category.create({ name: 'Laptops', slug: 'laptops' });
+
+    const res = await request(app)
+      .post('/api/v1/category/create')
+      .send({ name: 'Laptops' });
+
+    expect([200, 400, 409]).toContain(res.statusCode);
+    expect(res.body?.success).not.toBe(true);
+  });
+
+  test('GET /get-category -> lists categories (200)', async () => {
+    await Category.create([
+      { name: 'Tablets', slug: 'tablets' },
+      { name: 'Audio', slug: 'audio' },
+    ]);
+
+    const res = await request(app).get('/api/v1/category/get-category');
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body?.category || res.body)).toBeTruthy();
+
+    const list = Array.isArray(res.body) ? res.body : res.body.category;
+    expect(Array.isArray(list)).toBe(true);
+    expect(list.map(c => c.name).sort()).toEqual(['Audio', 'Tablets']);
   });
 
-  test("single category by slug", async () => {
-    const res = await request(app).get("/api/v1/category/single-category/phones");
-    expect(res.statusCode).toBeLessThan(400);
-    const cat = res.body?.category || res.body;
-    expect(cat?.slug || "phones").toBeDefined();
+  test('GET /single-category/:slug -> returns one (200)', async () => {
+    await Category.create({ name: 'Cameras', slug: 'cameras' });
+
+    const res = await request(app).get('/api/v1/category/single-category/cameras');
+    expect([200, 201]).toContain(res.statusCode);
+
+    const payload = res.body?.category ?? res.body?.data ?? res.body;
+    expect(payload?.name).toBe('Cameras');
+    expect(payload?.slug).toBe('cameras');
   });
 
-  test("update category", async () => {
-    const res = await request(app).put("/api/v1/category/update/c1").send({ name: "Smartphones" });
-    expect(res.statusCode).toBeLessThan(400);
-    const updated = res.body?.category || res.body;
-    expect(updated?.name || "Smartphones").toBeDefined();
+  test('PUT /update/:id -> updates a category (200)', async () => {
+    const cat = await Category.create({ name: 'Wearables', slug: 'wearables' });
+
+    const res = await request(app)
+      .put(`/api/v1/category/update/${cat._id}`)
+      .send({ name: 'Smart Wearables' });
+
+    expect([200, 201]).toContain(res.statusCode);
+
+    const updated = await Category.findById(cat._id);
+    expect(updated.name).toBe('Smart Wearables');
   });
 
-  test("delete category", async () => {
-    const res = await request(app).delete("/api/v1/category/delete-category/c2");
-    expect(res.statusCode).toBeLessThan(400);
+  test('DELETE /delete-category/:id -> deletes a category (200)', async () => {
+    const cat = await Category.create({ name: 'Accessories', slug: 'accessories' });
+
+    const res = await request(app).delete(`/api/v1/category/delete-category/${cat._id}`);
+    expect([200, 204]).toContain(res.statusCode);
+
+    const gone = await Category.findById(cat._id);
+    expect(gone).toBeNull();
   });
 });
