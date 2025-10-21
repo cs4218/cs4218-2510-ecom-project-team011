@@ -106,6 +106,11 @@ test.describe("About Page", () => {
       await expect(searchInput).toHaveValue("");
     });
 
+    test("should navigate to search page when Search link is clicked", async ({ page }) => {
+      await page.getByRole("link", { name: "Search" }).click();
+      await expect(page).toHaveURL(/.*search/);
+    });
+
     test("should preserve header functionality across page navigation", async ({ page }) => {
       await page.getByRole("link", { name: "Cart" }).click();
       await expect(page).toHaveURL(/.*cart/);
