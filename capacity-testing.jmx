@@ -162,11 +162,13 @@
             <stringProp name="filename"></stringProp>
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 double maxErrorRate = 0.1;
-long warmupPeriod = 10000; // 10 seconds in milliseconds
-int windowSize = 2000; // Check last 2000 samples for faster detection
+long warmupPeriod = 5000; // 5 seconds in milliseconds
+int windowSize = 500; // Smaller window for faster detection (0.1% of 500 = 0.5 errors, so 1+ error triggers)
+int consecutiveErrorThreshold = 10; // Fast-fail: stop immediately if 10 consecutive errors
 
 // Initialize counters
 if (!props.containsKey(&quot;errorRateTotal&quot;)) {
@@ -176,6 +178,7 @@ if (!props.containsKey(&quot;errorRateTotal&quot;)) {
             props.put(&quot;errorRateFailed&quot;, new AtomicLong(0));
             props.put(&quot;errorRateStartTime&quot;, new AtomicLong(System.currentTimeMillis()));
             props.put(&quot;errorWindow&quot;, new ConcurrentLinkedQueue());
+            props.put(&quot;consecutiveErrors&quot;, new AtomicInteger(0));
         }
     }
 }
@@ -184,9 +187,33 @@ AtomicLong totalCount = props.get(&quot;errorRateTotal&quot;);
 AtomicLong failedCount = props.get(&quot;errorRateFailed&quot;);
 AtomicLong startTime = props.get(&quot;errorRateStartTime&quot;);
 ConcurrentLinkedQueue errorWindow = props.get(&quot;errorWindow&quot;);
+AtomicInteger consecutiveErrors = props.get(&quot;consecutiveErrors&quot;);
 
 long total = totalCount.incrementAndGet();
 boolean isError = !prev.isSuccessful();
+
+// Track consecutive errors for fast-fail
+int consecutive;
+if (isError) {
+    consecutive = consecutiveErrors.incrementAndGet();
+} else {
+    consecutive = consecutiveErrors.getAndSet(0);
+}
+
+// Fast-fail on consecutive errors (catches rapid failure scenarios)
+if (consecutive &gt;= consecutiveErrorThreshold) {
+    String msg = String.format(&quot;CONSECUTIVE ERRORS: %d consecutive errors detected - stopping immediately&quot;, consecutive);
+    log.error(&quot;*** &quot; + msg + &quot; ***&quot;);
+    prev.setSuccessful(false);
+    prev.setResponseMessage(msg);
+    try {
+        ctx.getEngine().stopTest(false);
+        log.warn(&quot;STOPPING TEST: Consecutive error threshold exceeded&quot;);
+    } catch (Exception e) {
+        log.error(&quot;Failed to stop test: &quot; + e.getMessage());
+    }
+    return;
+}
 
 // Add to sliding window (1 = error, 0 = success)
 errorWindow.add(isError ? 1 : 0);
@@ -200,9 +227,9 @@ if (isError) {
     failedCount.incrementAndGet();
 }
 
-// Check after warmup
+// Check after warmup (reduced requirements for faster detection)
 long runtime = System.currentTimeMillis() - startTime.get();
-if (runtime &gt;= warmupPeriod &amp;&amp; total &gt; 100) {  // Need minimum samples
+if (runtime &gt;= warmupPeriod &amp;&amp; total &gt; 50 &amp;&amp; errorWindow.size() &gt;= 100) {  // Need minimum window samples
     // Calculate error rate from sliding window
     int windowErrors = 0;
     for (Integer val : errorWindow) {
@@ -213,22 +240,28 @@ if (runtime &gt;= warmupPeriod &amp;&amp; total &gt; 100) {  // Need minimum sam
     int windowTotal = errorWindow.size();
     double errorRate = windowTotal &gt; 0 ? (windowErrors / (double) windowTotal) * 100.0 : 0.0;
     
-    // Log every 500 samples
-    if (total % 500 == 0) {
+    // Log every 200 samples for visibility
+    if (total % 200 == 0) {
         long globalFailed = failedCount.get();
         double globalErrorRate = (globalFailed / (double) total) * 100.0;
-        log.info(String.format(&quot;Window error rate: %.3f%% (%d/%d), Global: %.3f%% (%d/%d)&quot;, 
-                              errorRate, windowErrors, windowTotal, globalErrorRate, globalFailed, total));
+        log.info(String.format(&quot;Window error rate: %.3f%% (%d/%d), Global: %.3f%% (%d/%d), Consecutive: %d&quot;, 
+                              errorRate, windowErrors, windowTotal, globalErrorRate, globalFailed, total, consecutive));
     }
     
     // Check threshold on every sample for fast detection
+    // With window of 500, 0.1% means 0.5 errors, so 1+ error = 0.2% which exceeds threshold
     if (errorRate &gt; maxErrorRate) {
         String msg = String.format(&quot;ERROR RATE EXCEEDED: %.3f%% &gt; %.2f%% (%d errors in %d sample window)&quot;, 
                                    errorRate, maxErrorRate, windowErrors, windowTotal);
         log.error(&quot;*** &quot; + msg + &quot; ***&quot;);
         prev.setSuccessful(false);
         prev.setResponseMessage(msg);
-        ctx.getEngine().stopTest(false);
+        try {
+            ctx.getEngine().stopTest(false);
+            log.warn(&quot;STOPPING TEST: Error rate threshold exceeded&quot;);
+        } catch (Exception e) {
+            log.error(&quot;Failed to stop test: &quot; + e.getMessage());
+        }
     }
 }</stringProp>
             <stringProp name="scriptLanguage">groovy</stringProp>
