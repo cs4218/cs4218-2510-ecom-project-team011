@@ -45,18 +45,19 @@ jobs:
           npm start &
           SERVER_PID=$!
           echo "Server PID: $SERVER_PID"
-          # Wait for server to be ready
-          timeout 120 bash -c "until curl -f http://localhost:${PORT}; do sleep 2; done" || {
+          # Wait for server to be ready (server runs on port 6060 by default)
+          SERVER_PORT=${PORT:-6060}
+          timeout 120 bash -c "until curl -f http://localhost:${SERVER_PORT}; do sleep 2; done" || {
             echo "Server failed to start. Checking logs..."
             ps aux | grep node
             kill $SERVER_PID 2>/dev/null || true
             exit 1
           }
-          echo "Server is ready on port ${PORT}!"
+          echo "Server is ready on port ${SERVER_PORT}!"
         env:
           NODE_ENV: production
-          PORT: ${{ secrets.PORT || '3000' }}
-          MONGO_URL: ${{ secrets.MONGO_URL || 'mongodb://localhost:27017/ecom-capacity-test' }}
+          PORT: ${{ secrets.PORT || '6060' }}
+          MONGO_URL: ${{ secrets.MONGO_URL }}
           BRAINTREE_MERCHANT_ID: ${{ secrets.BRAINTREE_MERCHANT_ID }}
           BRAINTREE_PUBLIC_KEY: ${{ secrets.BRAINTREE_PUBLIC_KEY }}
           BRAINTREE_PRIVATE_KEY: ${{ secrets.BRAINTREE_PRIVATE_KEY }}
@@ -65,15 +66,16 @@ jobs:
       - name: Run capacity test
         id: capacity_test
         run: |
+          SERVER_PORT=${PORT:-6060}
           jmeter -n -t capacity-testing.jmx \
-            -Jport=${PORT} \
+            -Jport=${SERVER_PORT} \
             -l results.jtl \
             -j jmeter.log \
             -e -o reports/ \
             || echo "Capacity test completed (may have found limits)"
         continue-on-error: true
         env:
-          PORT: ${{ secrets.PORT || '3000' }}
+          PORT: ${{ secrets.PORT || '6060' }}
 
       - name: Analyze capacity results
         run: |
