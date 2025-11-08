@@ -233,7 +233,16 @@ if (errorRate &gt; maxErrorRate) {
     log.error(&quot;*** &quot; + msg + &quot; ***&quot;);
     prev.setSuccessful(false);
     prev.setResponseMessage(msg);
-    props.put(&quot;stopTest&quot;, &quot;true&quot;);
+    // Stop test immediately in CLI mode (only once)
+    if (!&quot;true&quot;.equals(props.get(&quot;stopTest&quot;))) {
+        props.put(&quot;stopTest&quot;, &quot;true&quot;);
+        try {
+            ctx.getEngine().stopTest(false);
+            log.warn(&quot;STOPPING TEST: Error rate threshold exceeded&quot;);
+        } catch (Exception e) {
+            log.error(&quot;Failed to stop test: &quot; + e.getMessage());
+        }
+    }
 } else {
     prev.setResponseMessage(String.format(&quot;Error rate: %.2f%% (E:%d/W:%d)&quot;, 
                                          errorRate, errors, samplesInWindow));
@@ -288,7 +297,16 @@ if (testRuntime &gt;= warmupPeriod &amp;&amp; throughput &lt; minThroughput) {
     log.error(&quot;*** &quot; + msg + &quot; ***&quot;);
     prev.setSuccessful(false);
     prev.setResponseMessage(msg);
-    props.put(&quot;stopTest&quot;, &quot;true&quot;);
+    // Stop test immediately in CLI mode (only once)
+    if (!&quot;true&quot;.equals(props.get(&quot;stopTest&quot;))) {
+        props.put(&quot;stopTest&quot;, &quot;true&quot;);
+        try {
+            ctx.getEngine().stopTest(false);
+            log.warn(&quot;STOPPING TEST: Throughput threshold exceeded&quot;);
+        } catch (Exception e) {
+            log.error(&quot;Failed to stop test: &quot; + e.getMessage());
+        }
+    }
 }</stringProp>
             <stringProp name="scriptLanguage">groovy</stringProp>
           </JSR223Assertion>
@@ -308,7 +326,16 @@ if (!prev.isSuccessful()) {
     String responseMessage = prev.getResponseMessage();
     if (responseMessage != null &amp;&amp; responseMessage.contains(&quot;lasted too long&quot;)) {
         log.error(&quot;*** DURATION ASSERTION FAILED: Response time exceeded threshold ***&quot;);
-        props.put(&quot;stopTest&quot;, &quot;true&quot;);
+        // Stop test immediately in CLI mode (only once)
+        if (!&quot;true&quot;.equals(props.get(&quot;stopTest&quot;))) {
+            props.put(&quot;stopTest&quot;, &quot;true&quot;);
+            try {
+                ctx.getEngine().stopTest(false);
+                log.warn(&quot;STOPPING TEST: Duration threshold exceeded&quot;);
+            } catch (Exception e) {
+                log.error(&quot;Failed to stop test: &quot; + e.getMessage());
+            }
+        }
     }
 }</stringProp>
             <stringProp name="scriptLanguage">groovy</stringProp>
