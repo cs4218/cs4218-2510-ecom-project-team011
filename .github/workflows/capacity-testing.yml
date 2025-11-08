@@ -1,0 +1,208 @@
+name: Capacity Testing
+
+on:
+  workflow_dispatch:  # Manual trigger
+  schedule:
+    - cron: '0 2 * * 0'  # Weekly on Sunday at 2 AM
+  push:
+    branches: [main]
+    paths:
+      - 'capacity-testing.jmx'
+      - '.github/workflows/capacity-testing.yml'
+
+jobs:
+  capacity-test:
+    name: Capacity Test Analysis
+    runs-on: ubuntu-latest
+    continue-on-error: true  # Don't fail build - capacity tests are exploratory
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: |
+          npm install
+          cd client && npm install && cd ..
+
+      - name: Install JMeter
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jdk
+          wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.tgz
+          tar -xzf apache-jmeter-5.6.3.tgz
+          sudo mv apache-jmeter-5.6.3 /opt/jmeter
+          sudo chmod +x /opt/jmeter/bin/jmeter
+          echo "/opt/jmeter/bin" >> $GITHUB_PATH
+
+      - name: Start application server
+        run: |
+          npm start &
+          sleep 10
+          # Wait for server to be ready
+          timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+        env:
+          NODE_ENV: production
+
+      - name: Run capacity test
+        id: capacity_test
+        run: |
+          jmeter -n -t capacity-testing.jmx \
+            -l results.jtl \
+            -j jmeter.log \
+            -e -o reports/ \
+            || echo "Capacity test completed (may have found limits)"
+        continue-on-error: true
+
+      - name: Analyze capacity results
+        run: |
+          # Extract max threads from test configuration
+          MAX_THREADS=$(grep -oP 'ThreadGroup.num_threads.*?(\d+)' capacity-testing.jmx | grep -oP '\d+' | head -1)
+          
+          # Calculate metrics from results.jtl
+          if [ -f results.jtl ]; then
+            # Count total samples
+            TOTAL_SAMPLES=$(wc -l < results.jtl)
+            
+            # Count successful vs failed requests
+            SUCCESS=$(awk -F',' '$NF=="true" {count++} END{print count+0}' results.jtl)
+            FAILED=$(awk -F',' '$NF=="false" {count++} END{print count+0}' results.jtl)
+            
+            # Calculate success rate
+            if [ $TOTAL_SAMPLES -gt 0 ]; then
+              SUCCESS_RATE=$(echo "scale=2; $SUCCESS*100/$TOTAL_SAMPLES" | bc)
+            else
+              SUCCESS_RATE=0
+            fi
+            
+            # Find average response time (column 2 in CSV format)
+            AVG_RESPONSE_TIME=$(awk -F',' 'NR>1 {sum+=$2; count++} END{if(count>0) print sum/count; else print 0}' results.jtl)
+            
+            # Find max response time
+            MAX_RESPONSE_TIME=$(awk -F',' 'NR>1 {if($2>max) max=$2} END{print max+0}' results.jtl)
+            
+            # Find min response time
+            MIN_RESPONSE_TIME=$(awk -F',' 'NR>1 {if(min=="" || $2<min) min=$2} END{print min+0}' results.jtl)
+            
+            # Check if test stopped early (indicates threshold exceeded)
+            STOPPED_EARLY="NO"
+            if grep -q "ERROR RATE EXCEEDED\|THROUGHPUT DEGRADED\|DURATION ASSERTION FAILED" jmeter.log; then
+              STOPPED_EARLY="YES"
+            fi
+            
+            # Extract error rate from log if available
+            ERROR_RATE=$(grep -oP 'ERROR RATE EXCEEDED.*?(\d+\.\d+)%' jmeter.log | grep -oP '\d+\.\d+' | tail -1 || echo "0.00")
+            
+            # Calculate throughput (requests per second)
+            if [ -f results.jtl ] && [ $TOTAL_SAMPLES -gt 0 ]; then
+              FIRST_TIMESTAMP=$(awk -F',' 'NR==2 {print $1; exit}' results.jtl)
+              LAST_TIMESTAMP=$(awk -F',' 'END {print $1}' results.jtl)
+              if [ ! -z "$FIRST_TIMESTAMP" ] && [ ! -z "$LAST_TIMESTAMP" ]; then
+                DURATION=$(echo "scale=2; ($LAST_TIMESTAMP - $FIRST_TIMESTAMP) / 1000" | bc)
+                if [ $(echo "$DURATION > 0" | bc) -eq 1 ]; then
+                  THROUGHPUT=$(echo "scale=2; $TOTAL_SAMPLES / $DURATION" | bc)
+                else
+                  THROUGHPUT=0
+                fi
+              else
+                THROUGHPUT=0
+              fi
+            else
+              THROUGHPUT=0
+            fi
+          else
+            TOTAL_SAMPLES=0
+            SUCCESS=0
+            FAILED=0
+            SUCCESS_RATE=0
+            AVG_RESPONSE_TIME=0
+            MAX_RESPONSE_TIME=0
+            MIN_RESPONSE_TIME=0
+            THROUGHPUT=0
+            STOPPED_EARLY="UNKNOWN"
+            ERROR_RATE="0.00"
+          fi
+          
+          # Create summary report
+          cat > capacity-summary.txt <<EOF
+          ============================================
+          CAPACITY TEST RESULTS
+          ============================================
+          
+          Test Configuration:
+          - Max Threads: $MAX_THREADS
+          - Ramp Time: 500 seconds
+          - Duration: 500 seconds
+          
+          Test Results:
+          - Total Samples: $TOTAL_SAMPLES
+          - Successful: $SUCCESS
+          - Failed: $FAILED
+          - Success Rate: ${SUCCESS_RATE}%
+          - Error Rate: ${ERROR_RATE}%
+          
+          Performance Metrics:
+          - Average Response Time: ${AVG_RESPONSE_TIME} ms
+          - Min Response Time: ${MIN_RESPONSE_TIME} ms
+          - Max Response Time: ${MAX_RESPONSE_TIME} ms
+          - Throughput: ${THROUGHPUT} req/s
+          
+          Test Status:
+          - Stopped Early: $STOPPED_EARLY
+          
+          ============================================
+          EOF
+          
+          cat capacity-summary.txt
+          
+          # Set outputs for potential use in other steps
+          echo "max_threads=$MAX_THREADS" >> $GITHUB_OUTPUT
+          echo "total_samples=$TOTAL_SAMPLES" >> $GITHUB_OUTPUT
+          echo "success_rate=$SUCCESS_RATE" >> $GITHUB_OUTPUT
+          echo "throughput=$THROUGHPUT" >> $GITHUB_OUTPUT
+          echo "stopped_early=$STOPPED_EARLY" >> $GITHUB_OUTPUT
+
+      - name: Generate HTML report summary
+        if: always()
+        run: |
+          if [ -d reports/ ]; then
+            echo "HTML report generated in reports/ directory"
+          else
+            echo "No HTML report directory found"
+          fi
+
+      - name: Upload capacity test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capacity-test-results
+          path: |
+            results.jtl
+            jmeter.log
+            capacity-summary.txt
+            reports/
+          retention-days: 30
+
+      - name: Comment on PR with capacity results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            try {
+              const summary = fs.readFileSync('capacity-summary.txt', 'utf8');
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 📊 Capacity Test Results\n\n\`\`\`\n${summary}\n\`\`\`\n\n[View full report artifacts](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`
+              });
+            } catch (error) {
+              console.log('Could not read summary file or create comment:', error.message);
+            }
+

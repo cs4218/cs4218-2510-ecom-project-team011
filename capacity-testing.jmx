@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Test Plan">
+      <stringProp name="TestPlan.comments">Capacity test: Ramps up to 1000 concurrent users over 10 minutes, then runs for 10 minutes total duration (stops after 10 minutes or if error rate &gt; 0.1%, throughput drops below threshold)</stringProp>
+      <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+      <stringProp name="TestPlan.user_define_classpath">false</stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+    </TestPlan>
+    <hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Thread Group">
+        <intProp name="ThreadGroup.num_threads">5000</intProp>
+        <intProp name="ThreadGroup.ramp_time">500</intProp>
+        <longProp name="ThreadGroup.duration">500</longProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <boolProp name="ThreadGroup.scheduler">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <intProp name="LoopController.loops">-1</intProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults" enabled="true">
+          <stringProp name="HTTPSampler.domain">localhost</stringProp>
+          <stringProp name="HTTPSampler.port">3000</stringProp>
+          <stringProp name="HTTPSampler.protocol">${__P(proto,http)}</stringProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+          <stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
+        </ConfigTestElement>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="HTTP Request">
+          <stringProp name="HTTPSampler.path">/</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <JSR223PreProcessor guiclass="TestBeanGUI" testclass="JSR223PreProcessor" testname="Check Stop Test Flag">
+            <stringProp name="cacheKey">true</stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="script">// Check if test should be stopped due to assertion failure
+if (&quot;true&quot;.equals(props.get(&quot;stopTest&quot;))) {
+    log.warn(&quot;STOPPING TEST: Assertion threshold exceeded&quot;);
+    ctx.getEngine().stopTest(false);
+    props.put(&quot;stopTest&quot;, &quot;false&quot;);
+}</stringProp>
+            <stringProp name="scriptLanguage">groovy</stringProp>
+          </JSR223PreProcessor>
+          <hashTree/>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <sentBytes>true</sentBytes>
+                <url>true</url>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+                <connectTime>true</connectTime>
+              </value>
+            </objProp>
+            <stringProp name="filename"></stringProp>
+          </ResultCollector>
+          <hashTree/>
+          <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <sentBytes>true</sentBytes>
+                <url>true</url>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+                <connectTime>true</connectTime>
+              </value>
+            </objProp>
+            <stringProp name="filename"></stringProp>
+          </ResultCollector>
+          <hashTree/>
+          <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <sentBytes>true</sentBytes>
+                <url>true</url>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+                <connectTime>true</connectTime>
+              </value>
+            </objProp>
+            <stringProp name="filename"></stringProp>
+          </ResultCollector>
+          <hashTree/>
+          <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Error Rate Assertion" enabled="true">
+            <stringProp name="cacheKey">true</stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="script">import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.BitSet;
+
+double maxErrorRate = 0.1;
+int windowSize = 5000;
+
+// Initialize in props
+if (!props.containsKey(&quot;errorBitSet&quot;)) {
+    synchronized(props) {
+        if (!props.containsKey(&quot;errorBitSet&quot;)) {
+            props.put(&quot;errorBitSet&quot;, new BitSet(windowSize));
+            props.put(&quot;errorCount&quot;, new AtomicLong(0));
+            props.put(&quot;currentIndex&quot;, new AtomicInteger(0));
+            props.put(&quot;totalSamplesProcessed&quot;, new AtomicLong(0));
+        }
+    }
+}
+
+BitSet errorBits = props.get(&quot;errorBitSet&quot;);
+AtomicLong errorCount = props.get(&quot;errorCount&quot;);
+AtomicInteger currentIndex = props.get(&quot;currentIndex&quot;);
+AtomicLong totalProcessed = props.get(&quot;totalSamplesProcessed&quot;);
+
+// Get current position in circular buffer
+int index = currentIndex.getAndIncrement() % windowSize;
+long total = totalProcessed.incrementAndGet();
+
+// Check if we&apos;re overwriting an old error
+boolean oldWasError = errorBits.get(index);
+
+// Determine if current sample is an error
+boolean isError = !prev.isSuccessful();
+
+// Update the bit
+if (isError) {
+    errorBits.set(index);
+    if (!oldWasError) {
+        errorCount.incrementAndGet();
+    }
+} else {
+    errorBits.clear(index);
+    if (oldWasError) {
+        errorCount.decrementAndGet();
+    }
+}
+
+// Calculate error rate (only use full window after first 10k samples)
+int samplesInWindow = (int) Math.min(total, windowSize);
+long errors = errorCount.get();
+double errorRate = (errors / (double) samplesInWindow) * 100.0;
+
+// Check threshold
+if (errorRate &gt; maxErrorRate) {
+    String msg = String.format(&quot;ERROR RATE EXCEEDED: %.2f%% &gt; %.2f%% (Errors: %d/%d in window)&quot;, 
+                               errorRate, maxErrorRate, errors, samplesInWindow);
+    log.error(&quot;*** &quot; + msg + &quot; ***&quot;);
+    prev.setSuccessful(false);
+    prev.setResponseMessage(msg);
+    props.put(&quot;stopTest&quot;, &quot;true&quot;);
+} else {
+    prev.setResponseMessage(String.format(&quot;Error rate: %.2f%% (E:%d/W:%d)&quot;, 
+                                         errorRate, errors, samplesInWindow));
+}</stringProp>
+            <stringProp name="scriptLanguage">groovy</stringProp>
+          </JSR223Assertion>
+          <hashTree/>
+          <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Throughput Assertion" enabled="true">
+            <stringProp name="cacheKey">true</stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="script">import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicLong;
+
+double minThroughput = 6000.0;
+long windowSize = 1000; // 1 second window in ms
+long warmupPeriod = 300000; // 3 min warmup
+
+long currentTime = System.currentTimeMillis();
+
+// Initialize directly in props
+if (!props.containsKey(&quot;throughputTimestamps&quot;)) {
+    synchronized(props) {
+        if (!props.containsKey(&quot;throughputTimestamps&quot;)) {
+            props.put(&quot;throughputTimestamps&quot;, new ConcurrentLinkedQueue());
+            props.put(&quot;throughputStartTime&quot;, new AtomicLong(currentTime));
+        }
+    }
+}
+
+ConcurrentLinkedQueue timestamps = props.get(&quot;throughputTimestamps&quot;);
+AtomicLong testStartTime = props.get(&quot;throughputStartTime&quot;);
+
+// Add current sample
+timestamps.add(currentTime);
+
+// Clean up old timestamps
+long cutoffTime = currentTime - windowSize;
+while (timestamps.peek() != null &amp;&amp; timestamps.peek() &lt; cutoffTime) {
+    timestamps.poll();
+}
+
+// Calculate throughput
+int sampleCount = timestamps.size();
+double throughput = sampleCount / (windowSize / 1000.0);
+
+// Check threshold only after warmup
+long testRuntime = currentTime - testStartTime.get();
+if (testRuntime &gt;= warmupPeriod &amp;&amp; throughput &lt; minThroughput) {
+    String msg = String.format(&quot;THROUGHPUT DEGRADED: %.2f req/s &lt; %.2f req/s (samples: %d)&quot;, 
+                               throughput, minThroughput, sampleCount);
+    log.error(&quot;*** &quot; + msg + &quot; ***&quot;);
+    prev.setSuccessful(false);
+    prev.setResponseMessage(msg);
+    props.put(&quot;stopTest&quot;, &quot;true&quot;);
+}</stringProp>
+            <stringProp name="scriptLanguage">groovy</stringProp>
+          </JSR223Assertion>
+          <hashTree/>
+          <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Duration Assertion" enabled="true">
+            <stringProp name="DurationAssertion.duration">1800</stringProp>
+          </DurationAssertion>
+          <hashTree/>
+          <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Duration Assertion Flag Check">
+            <stringProp name="cacheKey">true</stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="script">// Check if Duration Assertion failed and set stop flag
+// This runs after the Duration Assertion, so we can check if it failed
+if (!prev.isSuccessful()) {
+    // Check if failure was due to Duration Assertion
+    String responseMessage = prev.getResponseMessage();
+    if (responseMessage != null &amp;&amp; responseMessage.contains(&quot;lasted too long&quot;)) {
+        log.error(&quot;*** DURATION ASSERTION FAILED: Response time exceeded threshold ***&quot;);
+        props.put(&quot;stopTest&quot;, &quot;true&quot;);
+    }
+}</stringProp>
+            <stringProp name="scriptLanguage">groovy</stringProp>
+          </JSR223Assertion>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>
