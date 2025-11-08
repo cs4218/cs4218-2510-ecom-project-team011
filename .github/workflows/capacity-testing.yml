@@ -9,6 +9,10 @@ on:
     paths:
       - 'capacity-testing.jmx'
       - '.github/workflows/capacity-testing.yml'
+  pull_request:
+    paths:
+      - 'capacity-testing.jmx'
+      - '.github/workflows/capacity-testing.yml'
 
 jobs:
   capacity-test:
