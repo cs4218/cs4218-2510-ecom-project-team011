@@ -33,7 +33,7 @@ jobs:
       - name: Install JMeter
         run: |
           sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk
+          sudo apt-get install -y openjdk-17-jdk bc
           wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.tgz
           tar -xzf apache-jmeter-5.6.3.tgz
           sudo mv apache-jmeter-5.6.3 /opt/jmeter
@@ -43,21 +43,37 @@ jobs:
       - name: Start application server
         run: |
           npm start &
-          sleep 10
+          SERVER_PID=$!
+          echo "Server PID: $SERVER_PID"
           # Wait for server to be ready
-          timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+          timeout 120 bash -c "until curl -f http://localhost:${PORT}; do sleep 2; done" || {
+            echo "Server failed to start. Checking logs..."
+            ps aux | grep node
+            kill $SERVER_PID 2>/dev/null || true
+            exit 1
+          }
+          echo "Server is ready on port ${PORT}!"
         env:
           NODE_ENV: production
+          PORT: ${{ secrets.PORT || '3000' }}
+          MONGO_URL: ${{ secrets.MONGO_URL || 'mongodb://localhost:27017/ecom-capacity-test' }}
+          BRAINTREE_MERCHANT_ID: ${{ secrets.BRAINTREE_MERCHANT_ID }}
+          BRAINTREE_PUBLIC_KEY: ${{ secrets.BRAINTREE_PUBLIC_KEY }}
+          BRAINTREE_PRIVATE_KEY: ${{ secrets.BRAINTREE_PRIVATE_KEY }}
+          DEV_MODE: capacity-test
 
       - name: Run capacity test
         id: capacity_test
         run: |
           jmeter -n -t capacity-testing.jmx \
+            -Jport=${PORT} \
             -l results.jtl \
             -j jmeter.log \
             -e -o reports/ \
             || echo "Capacity test completed (may have found limits)"
         continue-on-error: true
+        env:
+          PORT: ${{ secrets.PORT || '3000' }}
 
       - name: Analyze capacity results
         run: |
