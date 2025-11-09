@@ -35,7 +35,7 @@
           <stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
         </ConfigTestElement>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="HTTP Request">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="HTTP Request" enabled="true">
           <stringProp name="HTTPSampler.path">/</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
@@ -120,7 +120,7 @@
             <stringProp name="filename"></stringProp>
           </ResultCollector>
           <hashTree/>
-          <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report" enabled="true">
+          <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report">
             <boolProp name="ResultCollector.error_logging">false</boolProp>
             <objProp>
               <name>saveConfig</name>
@@ -157,18 +157,65 @@
             <stringProp name="filename"></stringProp>
           </ResultCollector>
           <hashTree/>
+          <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Duration Assertion">
+            <stringProp name="DurationAssertion.duration">1800</stringProp>
+          </DurationAssertion>
+          <hashTree/>
+          <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Duration Assertion Flag Check">
+            <stringProp name="cacheKey">true</stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="script">import java.util.concurrent.atomic.AtomicBoolean;
+
+// Initialize stop flag
+if (!props.containsKey(&quot;durationStopRequested&quot;)) {
+    synchronized(props) {
+        if (!props.containsKey(&quot;durationStopRequested&quot;)) {
+            props.put(&quot;durationStopRequested&quot;, new AtomicBoolean(false));
+        }
+    }
+}
+
+AtomicBoolean stopRequested = props.get(&quot;durationStopRequested&quot;);
+
+// Exit early if stop already requested
+if (stopRequested.get()) {
+    return;
+}
+
+// Only process if this sample actually failed
+if (!prev.isSuccessful()) {
+    String responseMessage = prev.getResponseMessage();
+    
+    // Check if failure was specifically due to Duration Assertion
+    if (responseMessage != null &amp;&amp; responseMessage.contains(&quot;lasted too long&quot;)) {
+        // Use compareAndSet to ensure only one thread triggers stop
+        if (stopRequested.compareAndSet(false, true)) {
+            log.error(&quot;*** DURATION ASSERTION FAILED: Response time exceeded threshold ***&quot;);
+            log.error(&quot;*** STOPPING TEST ***&quot;);
+            
+            try {
+                ctx.getEngine().stopTest(true);
+            } catch (Exception e) {
+                log.error(&quot;Failed to stop test: &quot; + e.getMessage());
+            }
+        }
+    }
+}</stringProp>
+            <stringProp name="scriptLanguage">groovy</stringProp>
+          </JSR223Assertion>
+          <hashTree/>
           <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Error Rate Assertion">
             <stringProp name="cacheKey">true</stringProp>
             <stringProp name="filename"></stringProp>
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-double maxErrorRate = 0.1;
-long warmupPeriod = 5000; // 5 seconds in milliseconds
-int windowSize = 500; // Smaller window for faster detection (0.1% of 500 = 0.5 errors, so 1+ error triggers)
-int consecutiveErrorThreshold = 10; // Fast-fail: stop immediately if 10 consecutive errors
+double maxErrorRate = 1;
+long warmupPeriod = 5000; // 5 seconds
+int windowSize = 1000;
 
 // Initialize counters
 if (!props.containsKey(&quot;errorRateTotal&quot;)) {
@@ -178,7 +225,7 @@ if (!props.containsKey(&quot;errorRateTotal&quot;)) {
             props.put(&quot;errorRateFailed&quot;, new AtomicLong(0));
             props.put(&quot;errorRateStartTime&quot;, new AtomicLong(System.currentTimeMillis()));
             props.put(&quot;errorWindow&quot;, new ConcurrentLinkedQueue());
-            props.put(&quot;consecutiveErrors&quot;, new AtomicInteger(0));
+            props.put(&quot;stopRequested&quot;, new AtomicBoolean(false));
         }
     }
 }
@@ -187,50 +234,30 @@ AtomicLong totalCount = props.get(&quot;errorRateTotal&quot;);
 AtomicLong failedCount = props.get(&quot;errorRateFailed&quot;);
 AtomicLong startTime = props.get(&quot;errorRateStartTime&quot;);
 ConcurrentLinkedQueue errorWindow = props.get(&quot;errorWindow&quot;);
-AtomicInteger consecutiveErrors = props.get(&quot;consecutiveErrors&quot;);
+AtomicBoolean stopRequested = props.get(&quot;stopRequested&quot;);
+
+// If already requested stop, don&apos;t process further
+if (stopRequested.get()) {
+    return;
+}
 
 long total = totalCount.incrementAndGet();
 boolean isError = !prev.isSuccessful();
 
-// Track consecutive errors for fast-fail
-int consecutive;
-if (isError) {
-    consecutive = consecutiveErrors.incrementAndGet();
-} else {
-    consecutive = consecutiveErrors.getAndSet(0);
-}
-
-// Fast-fail on consecutive errors (catches rapid failure scenarios)
-if (consecutive &gt;= consecutiveErrorThreshold) {
-    String msg = String.format(&quot;CONSECUTIVE ERRORS: %d consecutive errors detected - stopping immediately&quot;, consecutive);
-    log.error(&quot;*** &quot; + msg + &quot; ***&quot;);
-    prev.setSuccessful(false);
-    prev.setResponseMessage(msg);
-    try {
-        ctx.getEngine().stopTest(false);
-        log.warn(&quot;STOPPING TEST: Consecutive error threshold exceeded&quot;);
-    } catch (Exception e) {
-        log.error(&quot;Failed to stop test: &quot; + e.getMessage());
-    }
-    return;
-}
-
-// Add to sliding window (1 = error, 0 = success)
+// Add to sliding window
 errorWindow.add(isError ? 1 : 0);
-// Keep window size
 while (errorWindow.size() &gt; windowSize) {
     errorWindow.poll();
 }
 
-// Track global stats for logging
 if (isError) {
     failedCount.incrementAndGet();
 }
 
-// Check after warmup (reduced requirements for faster detection)
+// Check after warmup
 long runtime = System.currentTimeMillis() - startTime.get();
-if (runtime &gt;= warmupPeriod &amp;&amp; total &gt; 50 &amp;&amp; errorWindow.size() &gt;= 100) {  // Need minimum window samples
-    // Calculate error rate from sliding window
+if (runtime &gt;= warmupPeriod &amp;&amp; total &gt; 50 &amp;&amp; errorWindow.size() &gt;= 100) {
+    // Calculate error rate
     int windowErrors = 0;
     for (Integer val : errorWindow) {
         if (val != null &amp;&amp; val == 1) {
@@ -240,27 +267,20 @@ if (runtime &gt;= warmupPeriod &amp;&amp; total &gt; 50 &amp;&amp; errorWindow.s
     int windowTotal = errorWindow.size();
     double errorRate = windowTotal &gt; 0 ? (windowErrors / (double) windowTotal) * 100.0 : 0.0;
     
-    // Log every 200 samples for visibility
-    if (total % 200 == 0) {
-        long globalFailed = failedCount.get();
-        double globalErrorRate = (globalFailed / (double) total) * 100.0;
-        log.info(String.format(&quot;Window error rate: %.3f%% (%d/%d), Global: %.3f%% (%d/%d), Consecutive: %d&quot;, 
-                              errorRate, windowErrors, windowTotal, globalErrorRate, globalFailed, total, consecutive));
-    }
-    
-    // Check threshold on every sample for fast detection
-    // With window of 500, 0.1% means 0.5 errors, so 1+ error = 0.2% which exceeds threshold
+    // Check threshold
     if (errorRate &gt; maxErrorRate) {
-        String msg = String.format(&quot;ERROR RATE EXCEEDED: %.3f%% &gt; %.2f%% (%d errors in %d sample window)&quot;, 
-                                   errorRate, maxErrorRate, windowErrors, windowTotal);
-        log.error(&quot;*** &quot; + msg + &quot; ***&quot;);
-        prev.setSuccessful(false);
-        prev.setResponseMessage(msg);
-        try {
-            ctx.getEngine().stopTest(false);
-            log.warn(&quot;STOPPING TEST: Error rate threshold exceeded&quot;);
-        } catch (Exception e) {
-            log.error(&quot;Failed to stop test: &quot; + e.getMessage());
+        // Use compareAndSet to ensure only one thread triggers the stop
+        if (stopRequested.compareAndSet(false, true)) {
+            String msg = String.format(&quot;ERROR RATE EXCEEDED: %.3f%% &gt; %.2f%% (%d errors in %d sample window)&quot;, 
+                                       errorRate, maxErrorRate, windowErrors, windowTotal);
+            log.error(&quot;*** &quot; + msg + &quot; ***&quot;);
+            log.error(&quot;*** STOPPING TEST NOW ***&quot;);
+            
+            try {
+                ctx.getEngine().stopTest(true); // ✅ CORRECT METHOD
+            } catch (Exception e) {
+                log.error(&quot;Failed to stop test: &quot; + e.getMessage());
+            }
         }
     }
 }</stringProp>
@@ -272,10 +292,11 @@ if (runtime &gt;= warmupPeriod &amp;&amp; total &gt; 50 &amp;&amp; errorWindow.s
             <stringProp name="filename"></stringProp>
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 double minThroughput = 6000.0; // req/s
-long warmupPeriod = 300000; // 5 min warmup
-long checkInterval = 60000; // Check every 30 seconds
+long warmupPeriod = 60000; // 1 min warmup
+long checkInterval = 60000; // Check every 60 seconds
 
 long currentTime = System.currentTimeMillis();
 
@@ -286,6 +307,8 @@ if (!props.containsKey(&quot;throughputTotal&quot;)) {
             props.put(&quot;throughputTotal&quot;, new AtomicLong(0));
             props.put(&quot;throughputStartTime&quot;, new AtomicLong(currentTime));
             props.put(&quot;lastThroughputCheck&quot;, new AtomicLong(currentTime));
+            props.put(&quot;throughputStopRequested&quot;, new AtomicBoolean(false));
+            props.put(&quot;samplesAtWarmupEnd&quot;, new AtomicLong(-1)); // Track samples at warmup end
         }
     }
 }
@@ -293,6 +316,13 @@ if (!props.containsKey(&quot;throughputTotal&quot;)) {
 AtomicLong totalSamples = props.get(&quot;throughputTotal&quot;);
 AtomicLong testStartTime = props.get(&quot;throughputStartTime&quot;);
 AtomicLong lastCheck = props.get(&quot;lastThroughputCheck&quot;);
+AtomicBoolean stopRequested = props.get(&quot;throughputStopRequested&quot;);
+AtomicLong samplesAtWarmupEnd = props.get(&quot;samplesAtWarmupEnd&quot;);
+
+// If already requested stop, don&apos;t process further
+if (stopRequested.get()) {
+    return;
+}
 
 // Increment sample count
 long total = totalSamples.incrementAndGet();
@@ -301,45 +331,40 @@ long total = totalSamples.incrementAndGet();
 long testRuntime = currentTime - testStartTime.get();
 long timeSinceLastCheck = currentTime - lastCheck.get();
 
+// Mark samples at the end of warmup period
+if (testRuntime &gt;= warmupPeriod &amp;&amp; samplesAtWarmupEnd.get() == -1) {
+    samplesAtWarmupEnd.compareAndSet(-1, total);
+}
+
 if (testRuntime &gt;= warmupPeriod &amp;&amp; timeSinceLastCheck &gt;= checkInterval) {
     // Update last check time
     lastCheck.set(currentTime);
     
-    // Calculate average throughput since test start (after warmup)
+    // Calculate throughput ONLY from samples after warmup
+    long warmupEndSamples = samplesAtWarmupEnd.get();
+    long samplesAfterWarmup = total - warmupEndSamples;
     long effectiveRuntime = testRuntime - warmupPeriod;
-    double throughput = (total * 1000.0) / effectiveRuntime;
+    double throughput = (samplesAfterWarmup * 1000.0) / effectiveRuntime;
     
-    log.info(String.format(&quot;Current throughput: %.2f req/s (samples: %d, runtime: %d ms)&quot;, 
-                          throughput, total, effectiveRuntime));
+    log.info(String.format(&quot;Current throughput: %.2f req/s (samples after warmup: %d, runtime: %d ms)&quot;, 
+                          throughput, samplesAfterWarmup, effectiveRuntime));
     
     if (throughput &lt; minThroughput) {
-        String msg = String.format(&quot;THROUGHPUT DEGRADED: %.2f req/s &lt; %.2f req/s (samples: %d)&quot;, 
-                                   throughput, minThroughput, total);
-        log.error(&quot;*** &quot; + msg + &quot; ***&quot;);
-        prev.setSuccessful(false);
-        prev.setResponseMessage(msg);
-        ctx.getEngine().stopTest(false);
-    }
-}</stringProp>
-            <stringProp name="scriptLanguage">groovy</stringProp>
-          </JSR223Assertion>
-          <hashTree/>
-          <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Duration Assertion" enabled="true">
-            <stringProp name="DurationAssertion.duration">1800</stringProp>
-          </DurationAssertion>
-          <hashTree/>
-          <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Duration Assertion Flag Check">
-            <stringProp name="cacheKey">true</stringProp>
-            <stringProp name="filename"></stringProp>
-            <stringProp name="parameters"></stringProp>
-            <stringProp name="script">// Check if Duration Assertion failed and set stop flag
-// This runs after the Duration Assertion, so we can check if it failed
-if (!prev.isSuccessful()) {
-    // Check if failure was due to Duration Assertion
-    String responseMessage = prev.getResponseMessage();
-    if (responseMessage != null &amp;&amp; responseMessage.contains(&quot;lasted too long&quot;)) {
-        log.error(&quot;*** DURATION ASSERTION FAILED: Response time exceeded threshold ***&quot;);
-        ctx.getEngine().stopTest(false);
+        // Use compareAndSet to ensure only one thread triggers the stop
+        if (stopRequested.compareAndSet(false, true)) {
+            String msg = String.format(&quot;THROUGHPUT DEGRADED: %.2f req/s &lt; %.2f req/s (samples: %d)&quot;, 
+                                       throughput, minThroughput, samplesAfterWarmup);
+            log.error(&quot;*** &quot; + msg + &quot; ***&quot;);
+            log.error(&quot;*** STOPPING TEST DUE TO LOW THROUGHPUT ***&quot;);
+            prev.setSuccessful(false);
+            prev.setResponseMessage(msg);
+            
+            try {
+                ctx.getEngine().stopTest(true);
+            } catch (Exception e) {
+                log.error(&quot;Failed to stop test: &quot; + e.getMessage());
+            }
+        }
     }
 }</stringProp>
             <stringProp name="scriptLanguage">groovy</stringProp>
