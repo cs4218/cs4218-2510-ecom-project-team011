@@ -200,7 +200,7 @@
               <elementProp name="" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.value">{&quot;email&quot;:&quot;alice@test.com&quot;,&quot;password&quot;:&quot;1234567&quot;}</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
+                <stringProp name="Argument.metadata"></stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
