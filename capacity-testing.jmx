@@ -14,8 +14,8 @@
     <hashTree>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Thread Group">
         <intProp name="ThreadGroup.num_threads">5000</intProp>
-        <intProp name="ThreadGroup.ramp_time">1000</intProp>
-        <longProp name="ThreadGroup.duration">1200</longProp>
+        <intProp name="ThreadGroup.ramp_time">2500</intProp>
+        <longProp name="ThreadGroup.duration">2500</longProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
         <boolProp name="ThreadGroup.scheduler">true</boolProp>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
@@ -25,7 +25,7 @@
         </elementProp>
       </ThreadGroup>
       <hashTree>
-        <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults" enabled="true">
+        <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults">
           <stringProp name="HTTPSampler.domain">localhost</stringProp>
           <stringProp name="HTTPSampler.port">${__P(port,6060)}</stringProp>
           <stringProp name="HTTPSampler.protocol">${__P(proto,http)}</stringProp>
@@ -120,7 +120,7 @@
             <stringProp name="filename"></stringProp>
           </ResultCollector>
           <hashTree/>
-          <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report">
+          <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report" enabled="true">
             <boolProp name="ResultCollector.error_logging">false</boolProp>
             <objProp>
               <name>saveConfig</name>
@@ -157,11 +157,11 @@
             <stringProp name="filename"></stringProp>
           </ResultCollector>
           <hashTree/>
-          <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Duration Assertion">
+          <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Duration Assertion" enabled="true">
             <stringProp name="DurationAssertion.duration">1800</stringProp>
           </DurationAssertion>
           <hashTree/>
-          <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Duration Assertion Flag Check">
+          <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Duration Assertion Flag Check" enabled="true">
             <stringProp name="cacheKey">true</stringProp>
             <stringProp name="filename"></stringProp>
             <stringProp name="parameters"></stringProp>
@@ -205,7 +205,7 @@ if (!prev.isSuccessful()) {
             <stringProp name="scriptLanguage">groovy</stringProp>
           </JSR223Assertion>
           <hashTree/>
-          <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Error Rate Assertion">
+          <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Error Rate Assertion" enabled="true">
             <stringProp name="cacheKey">true</stringProp>
             <stringProp name="filename"></stringProp>
             <stringProp name="parameters"></stringProp>
@@ -287,7 +287,7 @@ if (runtime &gt;= warmupPeriod &amp;&amp; total &gt; 50 &amp;&amp; errorWindow.s
             <stringProp name="scriptLanguage">groovy</stringProp>
           </JSR223Assertion>
           <hashTree/>
-          <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Throughput Assertion">
+          <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Throughput Assertion" enabled="true">
             <stringProp name="cacheKey">true</stringProp>
             <stringProp name="filename"></stringProp>
             <stringProp name="parameters"></stringProp>
