@@ -87,8 +87,10 @@ jobs:
 
       - name: Analyze capacity results
         run: |
-          # Extract max threads from test configuration
+          # Extract test configuration from JMeter file
           MAX_THREADS=$(grep -oP 'ThreadGroup.num_threads.*?(\d+)' capacity-testing.jmx | grep -oP '\d+' | head -1)
+          RAMP_TIME=$(grep -oP 'ThreadGroup.ramp_time.*?(\d+)' capacity-testing.jmx | grep -oP '\d+' | head -1)
+          DURATION=$(grep -oP 'ThreadGroup.duration.*?(\d+)' capacity-testing.jmx | grep -oP '\d+' | head -1)
           
           # Calculate metrics from results.jtl
           if [ -f results.jtl ]; then
@@ -158,8 +160,8 @@ jobs:
           
           Test Configuration:
           - Max Threads: $MAX_THREADS
-          - Ramp Time: 1000 seconds
-          - Duration: 1200 seconds
+          - Ramp Time: ${RAMP_TIME:-1000} seconds
+          - Duration: ${DURATION:-1200} seconds
           
           Test Results:
           - Max Concurrent Threads: $MAX_CONCURRENT_THREADS
