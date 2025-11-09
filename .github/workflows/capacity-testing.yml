@@ -9,12 +9,20 @@ on:
     paths:
       - 'capacity-testing.jmx'
       - '.github/workflows/capacity-testing.yml'
+  pull_request:
+    paths:
+      - 'capacity-testing.jmx'
+      - '.github/workflows/capacity-testing.yml'
 
 jobs:
   capacity-test:
     name: Capacity Test Analysis
     runs-on: ubuntu-latest
     continue-on-error: true  # Don't fail build - capacity tests are exploratory
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: read
     
     steps:
       - name: Checkout code
@@ -58,10 +66,22 @@ jobs:
           NODE_ENV: production
           PORT: ${{ secrets.PORT || '6060' }}
           MONGO_URL: ${{ secrets.MONGO_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
           BRAINTREE_MERCHANT_ID: ${{ secrets.BRAINTREE_MERCHANT_ID }}
           BRAINTREE_PUBLIC_KEY: ${{ secrets.BRAINTREE_PUBLIC_KEY }}
           BRAINTREE_PRIVATE_KEY: ${{ secrets.BRAINTREE_PRIVATE_KEY }}
           DEV_MODE: capacity-test
+
+      - name: Create test user for capacity testing
+        run: |
+          SERVER_PORT=${PORT:-6060}
+          # Try to register the test user (will fail if user already exists, which is fine)
+          curl -X POST http://localhost:${SERVER_PORT}/api/v1/auth/register \
+            -H "Content-Type: application/json" \
+            -d '{"name":"Alice","email":"alice@test.com","password":"1234567","phone":"1","address":"a","answer":"sport1"}' \
+            || echo "Test user may already exist, continuing..."
+        env:
+          PORT: ${{ secrets.PORT || '6060' }}
 
       - name: Run capacity test
         id: capacity_test
@@ -79,24 +99,30 @@ jobs:
 
       - name: Analyze capacity results
         run: |
-          # Extract max threads from test configuration
+          # Extract test configuration from JMeter file
           MAX_THREADS=$(grep -oP 'ThreadGroup.num_threads.*?(\d+)' capacity-testing.jmx | grep -oP '\d+' | head -1)
+          RAMP_TIME=$(grep -oP 'ThreadGroup.ramp_time.*?(\d+)' capacity-testing.jmx | grep -oP '\d+' | head -1)
+          DURATION=$(grep -oP 'ThreadGroup.duration.*?(\d+)' capacity-testing.jmx | grep -oP '\d+' | head -1)
+          
+          # Calculate max concurrent threads from jmeter.log (only before assertion failure)
+          MAX_CONCURRENT_THREADS=0
+          if [ -f jmeter.log ]; then
+            # Find the line number where assertion failure occurred
+            ASSERTION_LINE=$(grep -n -i "assertion" jmeter.log | head -1 | cut -d: -f1)
+            if [ ! -z "$ASSERTION_LINE" ]; then
+              # Only process "Thread started" lines before the assertion (already sorted, so last one is max)
+              MAX_CONCURRENT_THREADS=$(head -n $((ASSERTION_LINE - 1)) jmeter.log | grep "Thread started: Thread Group" | tail -1 | sed 's/.*Thread Group 1-\([0-9]*\)/\1/')
+            else
+              # No assertion found, process all lines
+              MAX_CONCURRENT_THREADS=$(grep "Thread started: Thread Group" jmeter.log | tail -1 | sed 's/.*Thread Group 1-\([0-9]*\)/\1/')
+            fi
+            if [ -z "$MAX_CONCURRENT_THREADS" ]; then
+              MAX_CONCURRENT_THREADS=0
+            fi
+          fi
           
           # Calculate metrics from results.jtl
           if [ -f results.jtl ]; then
-            # Count total samples
-            TOTAL_SAMPLES=$(wc -l < results.jtl)
-            
-            # Count successful vs failed requests
-            SUCCESS=$(awk -F',' '$NF=="true" {count++} END{print count+0}' results.jtl)
-            FAILED=$(awk -F',' '$NF=="false" {count++} END{print count+0}' results.jtl)
-            
-            # Calculate success rate
-            if [ $TOTAL_SAMPLES -gt 0 ]; then
-              SUCCESS_RATE=$(echo "scale=2; $SUCCESS*100/$TOTAL_SAMPLES" | bc)
-            else
-              SUCCESS_RATE=0
-            fi
             
             # Find average response time (column 2 in CSV format)
             AVG_RESPONSE_TIME=$(awk -F',' 'NR>1 {sum+=$2; count++} END{if(count>0) print sum/count; else print 0}' results.jtl)
@@ -107,17 +133,10 @@ jobs:
             # Find min response time
             MIN_RESPONSE_TIME=$(awk -F',' 'NR>1 {if(min=="" || $2<min) min=$2} END{print min+0}' results.jtl)
             
-            # Check if test stopped early (indicates threshold exceeded)
-            STOPPED_EARLY="NO"
-            if grep -q "ERROR RATE EXCEEDED\|THROUGHPUT DEGRADED\|DURATION ASSERTION FAILED" jmeter.log; then
-              STOPPED_EARLY="YES"
-            fi
-            
-            # Extract error rate from log if available
-            ERROR_RATE=$(grep -oP 'ERROR RATE EXCEEDED.*?(\d+\.\d+)%' jmeter.log | grep -oP '\d+\.\d+' | tail -1 || echo "0.00")
-            
             # Calculate throughput (requests per second)
-            if [ -f results.jtl ] && [ $TOTAL_SAMPLES -gt 0 ]; then
+            TOTAL_SAMPLES=$(wc -l < results.jtl)
+            TOTAL_SAMPLES=$((TOTAL_SAMPLES - 1)) # Subtract header line
+            if [ $TOTAL_SAMPLES -gt 0 ]; then
               FIRST_TIMESTAMP=$(awk -F',' 'NR==2 {print $1; exit}' results.jtl)
               LAST_TIMESTAMP=$(awk -F',' 'END {print $1}' results.jtl)
               if [ ! -z "$FIRST_TIMESTAMP" ] && [ ! -z "$LAST_TIMESTAMP" ]; then
@@ -134,16 +153,30 @@ jobs:
               THROUGHPUT=0
             fi
           else
-            TOTAL_SAMPLES=0
-            SUCCESS=0
-            FAILED=0
-            SUCCESS_RATE=0
+            MAX_CONCURRENT_THREADS=0
             AVG_RESPONSE_TIME=0
             MAX_RESPONSE_TIME=0
             MIN_RESPONSE_TIME=0
             THROUGHPUT=0
-            STOPPED_EARLY="UNKNOWN"
-            ERROR_RATE="0.00"
+          fi
+          
+          # Extract stop reason from jmeter.log
+          STOP_REASON="Test completed normally"
+          if [ -f jmeter.log ]; then
+            # Look for assertion failure messages in log (lines containing "Assertion")
+            # Extract the full error message after the assertion type
+            ERROR_RATE_MSG=$(grep -i -m 1 "assertion.*ERROR RATE EXCEEDED" jmeter.log | sed 's/.*ERROR RATE EXCEEDED/ERROR RATE EXCEEDED/' | sed 's/\*\*\*//g' | sed 's/STOPPING TEST NOW//g' | xargs 2>/dev/null)
+            THROUGHPUT_MSG=$(grep -i -m 1 "assertion.*THROUGHPUT DEGRADED" jmeter.log | sed 's/.*THROUGHPUT DEGRADED/THROUGHPUT DEGRADED/' | sed 's/\*\*\*//g' | sed 's/STOPPING TEST NOW//g' | xargs 2>/dev/null)
+            DURATION_MSG=$(grep -i -m 1 "assertion.*DURATION ASSERTION FAILED" jmeter.log | sed 's/.*DURATION ASSERTION FAILED/DURATION ASSERTION FAILED/' | sed 's/\*\*\*//g' | sed 's/STOPPING TEST NOW//g' | xargs 2>/dev/null)
+            
+            # Use the first match found (priority: error rate > throughput > duration)
+            if [ ! -z "$ERROR_RATE_MSG" ]; then
+              STOP_REASON="$ERROR_RATE_MSG"
+            elif [ ! -z "$THROUGHPUT_MSG" ]; then
+              STOP_REASON="$THROUGHPUT_MSG"
+            elif [ ! -z "$DURATION_MSG" ]; then
+              STOP_REASON="$DURATION_MSG"
+            fi
           fi
           
           # Create summary report
@@ -154,24 +187,18 @@ jobs:
           
           Test Configuration:
           - Max Threads: $MAX_THREADS
-          - Ramp Time: 500 seconds
-          - Duration: 500 seconds
+          - Ramp Time: ${RAMP_TIME:-1000} seconds
+          - Duration: ${DURATION:-1200} seconds
           
           Test Results:
-          - Total Samples: $TOTAL_SAMPLES
-          - Successful: $SUCCESS
-          - Failed: $FAILED
-          - Success Rate: ${SUCCESS_RATE}%
-          - Error Rate: ${ERROR_RATE}%
-          
-          Performance Metrics:
+          - Max Concurrent Threads: $MAX_CONCURRENT_THREADS
           - Average Response Time: ${AVG_RESPONSE_TIME} ms
           - Min Response Time: ${MIN_RESPONSE_TIME} ms
           - Max Response Time: ${MAX_RESPONSE_TIME} ms
           - Throughput: ${THROUGHPUT} req/s
           
-          Test Status:
-          - Stopped Early: $STOPPED_EARLY
+          Test Stop Reason:
+          - $STOP_REASON
           
           ============================================
           EOF
@@ -180,10 +207,8 @@ jobs:
           
           # Set outputs for potential use in other steps
           echo "max_threads=$MAX_THREADS" >> $GITHUB_OUTPUT
-          echo "total_samples=$TOTAL_SAMPLES" >> $GITHUB_OUTPUT
-          echo "success_rate=$SUCCESS_RATE" >> $GITHUB_OUTPUT
+          echo "max_concurrent_threads=$MAX_CONCURRENT_THREADS" >> $GITHUB_OUTPUT
           echo "throughput=$THROUGHPUT" >> $GITHUB_OUTPUT
-          echo "stopped_early=$STOPPED_EARLY" >> $GITHUB_OUTPUT
 
       - name: Generate HTML report summary
         if: always()
@@ -210,17 +235,28 @@ jobs:
         if: github.event_name == 'pull_request' && always()
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             try {
               const summary = fs.readFileSync('capacity-summary.txt', 'utf8');
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
+              
+              // Use PR number instead of issue number for pull requests
+              const prNumber = context.payload.pull_request?.number || context.issue?.number;
+              
+              if (!prNumber) {
+                console.log('No PR number found, skipping comment');
+                return;
+              }
+              
+              await github.rest.issues.createComment({
+                issue_number: prNumber,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 body: `## 📊 Capacity Test Results\n\n\`\`\`\n${summary}\n\`\`\`\n\n[View full report artifacts](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`
               });
             } catch (error) {
               console.log('Could not read summary file or create comment:', error.message);
+              // Don't fail the workflow if commenting fails
             }
 

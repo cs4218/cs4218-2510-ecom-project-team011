@@ -13,9 +13,10 @@
     </TestPlan>
     <hashTree>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Thread Group">
-        <intProp name="ThreadGroup.num_threads">5000</intProp>
-        <intProp name="ThreadGroup.ramp_time">500</intProp>
-        <longProp name="ThreadGroup.duration">500</longProp>
+        <intProp name="ThreadGroup.num_threads">2000</intProp>
+        <intProp name="ThreadGroup.ramp_time">1000</intProp>
+        <longProp name="ThreadGroup.duration">1000</longProp>
+        <longProp name="ThreadGroup.delay">10</longProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
         <boolProp name="ThreadGroup.scheduler">true</boolProp>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
@@ -25,6 +26,11 @@
         </elementProp>
       </ThreadGroup>
       <hashTree>
+        <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Uniform Random Timer" enabled="true">
+          <stringProp name="ConstantTimer.delay">0</stringProp>
+          <stringProp name="RandomTimer.range">3000</stringProp>
+        </UniformRandomTimer>
+        <hashTree/>
         <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults" enabled="true">
           <stringProp name="HTTPSampler.domain">localhost</stringProp>
           <stringProp name="HTTPSampler.port">${__P(port,6060)}</stringProp>
@@ -35,8 +41,189 @@
           <stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
         </ConfigTestElement>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="HTTP Request">
-          <stringProp name="HTTPSampler.path">/</stringProp>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get All Products" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/v1/product/get-product</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get Product List Page" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/v1/product/product-list/1</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Search Products" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/v1/product/search/laptop</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get All Categories" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/v1/category/get-category</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get Products by Category">
+          <stringProp name="HTTPSampler.path">/api/v1/product/product-category/electronics</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get Single Product" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/v1/product/get-product/laptop</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get Product Photo" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/v1/product/product-photo/67a21772a6d9e00ef2ac022a</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get Product Count" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/v1/product/product-count</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get Related Products">
+          <stringProp name="HTTPSampler.path">/api/v1/product/related-product/66db427fdb0119d9234b27f1/66db427fdb0119d9234b27f3</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get Single Category" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/v1/category/single-category/electronics</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get Braintree Token" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/v1/product/braintree/token</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Filter Products" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/v1/product/product-filters</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">{&quot;checked&quot;:[&quot;66db427fdb0119d9234b27f3&quot;],&quot;radio&quot;:[0,1000]}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Content-Type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="User Login" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/v1/auth/login</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">{&quot;email&quot;:&quot;alice@test.com&quot;,&quot;password&quot;:&quot;1234567&quot;}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Content-Type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+          <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="Extract Auth Token" enabled="true">
+            <stringProp name="JSONPostProcessor.referenceNames">authToken</stringProp>
+            <stringProp name="JSONPostProcessor.jsonPathExprs">$.token</stringProp>
+            <stringProp name="JSONPostProcessor.match_numbers">0</stringProp>
+          </JSONPostProcessor>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="User Auth Check" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/v1/auth/user-auth</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -46,302 +233,343 @@
           </elementProp>
         </HTTPSamplerProxy>
         <hashTree>
-          <JSR223PreProcessor guiclass="TestBeanGUI" testclass="JSR223PreProcessor" testname="Check Stop Test Flag">
-            <stringProp name="cacheKey">true</stringProp>
-            <stringProp name="filename"></stringProp>
-            <stringProp name="parameters"></stringProp>
-            <stringProp name="script">// Check if test should be stopped due to assertion failure
-if (&quot;true&quot;.equals(props.get(&quot;stopTest&quot;))) {
-    log.warn(&quot;STOPPING TEST: Assertion threshold exceeded&quot;);
-    ctx.getEngine().stopTest(false);
-    props.put(&quot;stopTest&quot;, &quot;false&quot;);
-}</stringProp>
-            <stringProp name="scriptLanguage">groovy</stringProp>
-          </JSR223PreProcessor>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">authorization</stringProp>
+                <stringProp name="Header.value">${authToken}</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
           <hashTree/>
-          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
-            <boolProp name="ResultCollector.error_logging">false</boolProp>
-            <objProp>
-              <name>saveConfig</name>
-              <value class="SampleSaveConfiguration">
-                <time>true</time>
-                <latency>true</latency>
-                <timestamp>true</timestamp>
-                <success>true</success>
-                <label>true</label>
-                <code>true</code>
-                <message>true</message>
-                <threadName>true</threadName>
-                <dataType>true</dataType>
-                <encoding>false</encoding>
-                <assertions>true</assertions>
-                <subresults>true</subresults>
-                <responseData>false</responseData>
-                <samplerData>false</samplerData>
-                <xml>false</xml>
-                <fieldNames>true</fieldNames>
-                <responseHeaders>false</responseHeaders>
-                <requestHeaders>false</requestHeaders>
-                <responseDataOnError>false</responseDataOnError>
-                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
-                <assertionsResultsToSave>0</assertionsResultsToSave>
-                <bytes>true</bytes>
-                <sentBytes>true</sentBytes>
-                <url>true</url>
-                <threadCounts>true</threadCounts>
-                <idleTime>true</idleTime>
-                <connectTime>true</connectTime>
-              </value>
-            </objProp>
-            <stringProp name="filename"></stringProp>
-          </ResultCollector>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get User Orders" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/v1/auth/orders</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">authorization</stringProp>
+                <stringProp name="Header.value">${authToken}</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
           <hashTree/>
-          <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
-            <boolProp name="ResultCollector.error_logging">false</boolProp>
-            <objProp>
-              <name>saveConfig</name>
-              <value class="SampleSaveConfiguration">
-                <time>true</time>
-                <latency>true</latency>
-                <timestamp>true</timestamp>
-                <success>true</success>
-                <label>true</label>
-                <code>true</code>
-                <message>true</message>
-                <threadName>true</threadName>
-                <dataType>true</dataType>
-                <encoding>false</encoding>
-                <assertions>true</assertions>
-                <subresults>true</subresults>
-                <responseData>false</responseData>
-                <samplerData>false</samplerData>
-                <xml>false</xml>
-                <fieldNames>true</fieldNames>
-                <responseHeaders>false</responseHeaders>
-                <requestHeaders>false</requestHeaders>
-                <responseDataOnError>false</responseDataOnError>
-                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
-                <assertionsResultsToSave>0</assertionsResultsToSave>
-                <bytes>true</bytes>
-                <sentBytes>true</sentBytes>
-                <url>true</url>
-                <threadCounts>true</threadCounts>
-                <idleTime>true</idleTime>
-                <connectTime>true</connectTime>
-              </value>
-            </objProp>
-            <stringProp name="filename"></stringProp>
-          </ResultCollector>
-          <hashTree/>
-          <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report" enabled="true">
-            <boolProp name="ResultCollector.error_logging">false</boolProp>
-            <objProp>
-              <name>saveConfig</name>
-              <value class="SampleSaveConfiguration">
-                <time>true</time>
-                <latency>true</latency>
-                <timestamp>true</timestamp>
-                <success>true</success>
-                <label>true</label>
-                <code>true</code>
-                <message>true</message>
-                <threadName>true</threadName>
-                <dataType>true</dataType>
-                <encoding>false</encoding>
-                <assertions>true</assertions>
-                <subresults>true</subresults>
-                <responseData>false</responseData>
-                <samplerData>false</samplerData>
-                <xml>false</xml>
-                <fieldNames>true</fieldNames>
-                <responseHeaders>false</responseHeaders>
-                <requestHeaders>false</requestHeaders>
-                <responseDataOnError>false</responseDataOnError>
-                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
-                <assertionsResultsToSave>0</assertionsResultsToSave>
-                <bytes>true</bytes>
-                <sentBytes>true</sentBytes>
-                <url>true</url>
-                <threadCounts>true</threadCounts>
-                <idleTime>true</idleTime>
-                <connectTime>true</connectTime>
-              </value>
-            </objProp>
-            <stringProp name="filename"></stringProp>
-          </ResultCollector>
-          <hashTree/>
-          <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Error Rate Assertion" enabled="true">
-            <stringProp name="cacheKey">true</stringProp>
-            <stringProp name="filename"></stringProp>
-            <stringProp name="parameters"></stringProp>
-            <stringProp name="script">import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.BitSet;
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Main Page" enabled="true">
+          <stringProp name="HTTPSampler.path">/</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <assertionsResultsToSave>0</assertionsResultsToSave>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename"></stringProp>
+        </ResultCollector>
+        <hashTree/>
+        <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <assertionsResultsToSave>0</assertionsResultsToSave>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename"></stringProp>
+        </ResultCollector>
+        <hashTree/>
+        <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report" enabled="true">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <assertionsResultsToSave>0</assertionsResultsToSave>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename"></stringProp>
+        </ResultCollector>
+        <hashTree/>
+        <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion">
+          <collectionProp name="Asserion.test_strings">
+            <stringProp name="49586">200</stringProp>
+          </collectionProp>
+          <stringProp name="Assertion.custom_message"></stringProp>
+          <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+          <boolProp name="Assertion.assume_success">false</boolProp>
+          <intProp name="Assertion.test_type">8</intProp>
+        </ResponseAssertion>
+        <hashTree/>
+        <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Duration Assertion">
+          <stringProp name="DurationAssertion.duration">5000</stringProp>
+        </DurationAssertion>
+        <hashTree/>
+        <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Error Rate Assertion">
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="script">import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-double maxErrorRate = 0.1;
-int windowSize = 5000;
+double maxErrorRate = 2;
+long warmupPeriod = 5000; // 5 seconds
+int windowSize = 1000;
 
-// Initialize in props
-if (!props.containsKey(&quot;errorBitSet&quot;)) {
+// Initialize counters
+if (!props.containsKey(&quot;errorRateTotal&quot;)) {
     synchronized(props) {
-        if (!props.containsKey(&quot;errorBitSet&quot;)) {
-            props.put(&quot;errorBitSet&quot;, new BitSet(windowSize));
-            props.put(&quot;errorCount&quot;, new AtomicLong(0));
-            props.put(&quot;currentIndex&quot;, new AtomicInteger(0));
-            props.put(&quot;totalSamplesProcessed&quot;, new AtomicLong(0));
+        if (!props.containsKey(&quot;errorRateTotal&quot;)) {
+            props.put(&quot;errorRateTotal&quot;, new AtomicLong(0));
+            props.put(&quot;errorRateFailed&quot;, new AtomicLong(0));
+            props.put(&quot;errorRateStartTime&quot;, new AtomicLong(System.currentTimeMillis()));
+            props.put(&quot;errorWindow&quot;, new ConcurrentLinkedQueue());
+            props.put(&quot;stopRequested&quot;, new AtomicBoolean(false));
         }
     }
 }
 
-BitSet errorBits = props.get(&quot;errorBitSet&quot;);
-AtomicLong errorCount = props.get(&quot;errorCount&quot;);
-AtomicInteger currentIndex = props.get(&quot;currentIndex&quot;);
-AtomicLong totalProcessed = props.get(&quot;totalSamplesProcessed&quot;);
+AtomicLong totalCount = props.get(&quot;errorRateTotal&quot;);
+AtomicLong failedCount = props.get(&quot;errorRateFailed&quot;);
+AtomicLong startTime = props.get(&quot;errorRateStartTime&quot;);
+ConcurrentLinkedQueue errorWindow = props.get(&quot;errorWindow&quot;);
+AtomicBoolean stopRequested = props.get(&quot;stopRequested&quot;);
 
-// Get current position in circular buffer
-int index = currentIndex.getAndIncrement() % windowSize;
-long total = totalProcessed.incrementAndGet();
+// If already requested stop, don&apos;t process further
+if (stopRequested.get()) {
+    return;
+}
 
-// Check if we&apos;re overwriting an old error
-boolean oldWasError = errorBits.get(index);
-
-// Determine if current sample is an error
+long total = totalCount.incrementAndGet();
 boolean isError = !prev.isSuccessful();
 
-// Update the bit
+// Add to sliding window
+errorWindow.add(isError ? 1 : 0);
+while (errorWindow.size() &gt; windowSize) {
+    errorWindow.poll();
+}
+
 if (isError) {
-    errorBits.set(index);
-    if (!oldWasError) {
-        errorCount.incrementAndGet();
-    }
-} else {
-    errorBits.clear(index);
-    if (oldWasError) {
-        errorCount.decrementAndGet();
-    }
+    failedCount.incrementAndGet();
 }
 
-// Calculate error rate (only use full window after first 10k samples)
-int samplesInWindow = (int) Math.min(total, windowSize);
-long errors = errorCount.get();
-double errorRate = (errors / (double) samplesInWindow) * 100.0;
-
-// Check threshold
-if (errorRate &gt; maxErrorRate) {
-    String msg = String.format(&quot;ERROR RATE EXCEEDED: %.2f%% &gt; %.2f%% (Errors: %d/%d in window)&quot;, 
-                               errorRate, maxErrorRate, errors, samplesInWindow);
-    log.error(&quot;*** &quot; + msg + &quot; ***&quot;);
-    prev.setSuccessful(false);
-    prev.setResponseMessage(msg);
-    // Stop test immediately in CLI mode (only once)
-    if (!&quot;true&quot;.equals(props.get(&quot;stopTest&quot;))) {
-        props.put(&quot;stopTest&quot;, &quot;true&quot;);
-        try {
-            ctx.getEngine().stopTest(false);
-            log.warn(&quot;STOPPING TEST: Error rate threshold exceeded&quot;);
-        } catch (Exception e) {
-            log.error(&quot;Failed to stop test: &quot; + e.getMessage());
+// Check after warmup
+long runtime = System.currentTimeMillis() - startTime.get();
+if (runtime &gt;= warmupPeriod &amp;&amp; total &gt; 50 &amp;&amp; errorWindow.size() &gt;= 100) {
+    // Calculate error rate
+    int windowErrors = 0;
+    for (Integer val : errorWindow) {
+        if (val != null &amp;&amp; val == 1) {
+            windowErrors++;
         }
     }
-} else {
-    prev.setResponseMessage(String.format(&quot;Error rate: %.2f%% (E:%d/W:%d)&quot;, 
-                                         errorRate, errors, samplesInWindow));
-}</stringProp>
-            <stringProp name="scriptLanguage">groovy</stringProp>
-          </JSR223Assertion>
-          <hashTree/>
-          <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Throughput Assertion" enabled="true">
-            <stringProp name="cacheKey">true</stringProp>
-            <stringProp name="filename"></stringProp>
-            <stringProp name="parameters"></stringProp>
-            <stringProp name="script">import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicLong;
-
-double minThroughput = 6000.0;
-long windowSize = 1000; // 1 second window in ms
-long warmupPeriod = 300000; // 3 min warmup
-
-long currentTime = System.currentTimeMillis();
-
-// Initialize directly in props
-if (!props.containsKey(&quot;throughputTimestamps&quot;)) {
-    synchronized(props) {
-        if (!props.containsKey(&quot;throughputTimestamps&quot;)) {
-            props.put(&quot;throughputTimestamps&quot;, new ConcurrentLinkedQueue());
-            props.put(&quot;throughputStartTime&quot;, new AtomicLong(currentTime));
-        }
-    }
-}
-
-ConcurrentLinkedQueue timestamps = props.get(&quot;throughputTimestamps&quot;);
-AtomicLong testStartTime = props.get(&quot;throughputStartTime&quot;);
-
-// Add current sample
-timestamps.add(currentTime);
-
-// Clean up old timestamps
-long cutoffTime = currentTime - windowSize;
-while (timestamps.peek() != null &amp;&amp; timestamps.peek() &lt; cutoffTime) {
-    timestamps.poll();
-}
-
-// Calculate throughput
-int sampleCount = timestamps.size();
-double throughput = sampleCount / (windowSize / 1000.0);
-
-// Check threshold only after warmup
-long testRuntime = currentTime - testStartTime.get();
-if (testRuntime &gt;= warmupPeriod &amp;&amp; throughput &lt; minThroughput) {
-    String msg = String.format(&quot;THROUGHPUT DEGRADED: %.2f req/s &lt; %.2f req/s (samples: %d)&quot;, 
-                               throughput, minThroughput, sampleCount);
-    log.error(&quot;*** &quot; + msg + &quot; ***&quot;);
-    prev.setSuccessful(false);
-    prev.setResponseMessage(msg);
-    // Stop test immediately in CLI mode (only once)
-    if (!&quot;true&quot;.equals(props.get(&quot;stopTest&quot;))) {
-        props.put(&quot;stopTest&quot;, &quot;true&quot;);
-        try {
-            ctx.getEngine().stopTest(false);
-            log.warn(&quot;STOPPING TEST: Throughput threshold exceeded&quot;);
-        } catch (Exception e) {
-            log.error(&quot;Failed to stop test: &quot; + e.getMessage());
-        }
-    }
-}</stringProp>
-            <stringProp name="scriptLanguage">groovy</stringProp>
-          </JSR223Assertion>
-          <hashTree/>
-          <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Duration Assertion" enabled="true">
-            <stringProp name="DurationAssertion.duration">1800</stringProp>
-          </DurationAssertion>
-          <hashTree/>
-          <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Duration Assertion Flag Check">
-            <stringProp name="cacheKey">true</stringProp>
-            <stringProp name="filename"></stringProp>
-            <stringProp name="parameters"></stringProp>
-            <stringProp name="script">// Check if Duration Assertion failed and set stop flag
-// This runs after the Duration Assertion, so we can check if it failed
-if (!prev.isSuccessful()) {
-    // Check if failure was due to Duration Assertion
-    String responseMessage = prev.getResponseMessage();
-    if (responseMessage != null &amp;&amp; responseMessage.contains(&quot;lasted too long&quot;)) {
-        log.error(&quot;*** DURATION ASSERTION FAILED: Response time exceeded threshold ***&quot;);
-        // Stop test immediately in CLI mode (only once)
-        if (!&quot;true&quot;.equals(props.get(&quot;stopTest&quot;))) {
-            props.put(&quot;stopTest&quot;, &quot;true&quot;);
+    int windowTotal = errorWindow.size();
+    double errorRate = windowTotal &gt; 0 ? (windowErrors / (double) windowTotal) * 100.0 : 0.0;
+    
+    // Check threshold
+    if (errorRate &gt; maxErrorRate) {
+        // Use compareAndSet to ensure only one thread triggers the stop
+        if (stopRequested.compareAndSet(false, true)) {
+            String msg = String.format(&quot;ERROR RATE EXCEEDED: %.3f%% &gt; %.2f%% (%d errors in %d sample window)&quot;, 
+                                       errorRate, maxErrorRate, windowErrors, windowTotal);
+            log.error(&quot;*** &quot; + msg + &quot; ***&quot;);
+            
             try {
-                ctx.getEngine().stopTest(false);
-                log.warn(&quot;STOPPING TEST: Duration threshold exceeded&quot;);
+                ctx.getThreadGroup().stop();
             } catch (Exception e) {
                 log.error(&quot;Failed to stop test: &quot; + e.getMessage());
             }
         }
     }
 }</stringProp>
-            <stringProp name="scriptLanguage">groovy</stringProp>
-          </JSR223Assertion>
-          <hashTree/>
-        </hashTree>
+          <stringProp name="scriptLanguage">groovy</stringProp>
+        </JSR223Assertion>
+        <hashTree/>
+        <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Throughput Assertion">
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="script">import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+double minThroughput = 300.0; // req/s
+long warmupPeriod = 300000; // 5 min warmup
+long checkInterval = 60000; // Check every 60 seconds
+
+long currentTime = System.currentTimeMillis();
+
+// Initialize
+if (!props.containsKey(&quot;throughputTotal&quot;)) {
+    synchronized(props) {
+        if (!props.containsKey(&quot;throughputTotal&quot;)) {
+            props.put(&quot;throughputTotal&quot;, new AtomicLong(0));
+            props.put(&quot;throughputStartTime&quot;, new AtomicLong(currentTime));
+            props.put(&quot;lastThroughputCheck&quot;, new AtomicLong(currentTime));
+            props.put(&quot;throughputStopRequested&quot;, new AtomicBoolean(false));
+            props.put(&quot;samplesAtWarmupEnd&quot;, new AtomicLong(-1)); // Track samples at warmup end
+        }
+    }
+}
+
+AtomicLong totalSamples = props.get(&quot;throughputTotal&quot;);
+AtomicLong testStartTime = props.get(&quot;throughputStartTime&quot;);
+AtomicLong lastCheck = props.get(&quot;lastThroughputCheck&quot;);
+AtomicBoolean stopRequested = props.get(&quot;throughputStopRequested&quot;);
+AtomicLong samplesAtWarmupEnd = props.get(&quot;samplesAtWarmupEnd&quot;);
+
+// If already requested stop, don&apos;t process further
+if (stopRequested.get()) {
+    return;
+}
+
+// Increment sample count
+long total = totalSamples.incrementAndGet();
+
+// Check threshold only after warmup and at intervals
+long testRuntime = currentTime - testStartTime.get();
+long timeSinceLastCheck = currentTime - lastCheck.get();
+
+// Mark samples at the end of warmup period
+if (testRuntime &gt;= warmupPeriod &amp;&amp; samplesAtWarmupEnd.get() == -1) {
+    samplesAtWarmupEnd.compareAndSet(-1, total);
+}
+
+if (testRuntime &gt;= warmupPeriod &amp;&amp; timeSinceLastCheck &gt;= checkInterval) {
+    // Update last check time
+    lastCheck.set(currentTime);
+    
+    // Calculate throughput ONLY from samples after warmup
+    long warmupEndSamples = samplesAtWarmupEnd.get();
+    long samplesAfterWarmup = total - warmupEndSamples;
+    long effectiveRuntime = testRuntime - warmupPeriod;
+
+    if (effectiveRuntime &lt;= 0 || samplesAfterWarmup &lt; 0) {
+            log.warn(&quot;Invalid calculation: effectiveRuntime=&quot; + effectiveRuntime + 
+                    &quot;, samplesAfterWarmup=&quot; + samplesAfterWarmup);
+            return;
+    }
+    
+    double throughput = (samplesAfterWarmup * 1000.0) / effectiveRuntime;
+    
+    log.info(String.format(&quot;Current throughput: %.2f req/s (samples after warmup: %d, runtime: %d ms)&quot;, 
+                          throughput, samplesAfterWarmup, effectiveRuntime));
+    
+    if (throughput &lt; minThroughput) {
+        // Use compareAndSet to ensure only one thread triggers the stop
+        if (stopRequested.compareAndSet(false, true)) {
+            String msg = String.format(&quot;THROUGHPUT DEGRADED: %.2f req/s &lt; %.2f req/s (samples: %d)&quot;, 
+                                       throughput, minThroughput, samplesAfterWarmup);
+            log.error(&quot;*** &quot; + msg + &quot; ***&quot;);
+            prev.setSuccessful(false);
+            prev.setResponseMessage(msg);
+            
+            try {
+                ctx.getThreadGroup().stop();
+            } catch (Exception e) {
+                log.error(&quot;Failed to stop test: &quot; + e.getMessage());
+            }
+        }
+    }
+}</stringProp>
+          <stringProp name="scriptLanguage">groovy</stringProp>
+        </JSR223Assertion>
+        <hashTree/>
       </hashTree>
     </hashTree>
   </hashTree>
