@@ -19,6 +19,10 @@ jobs:
     name: Capacity Test Analysis
     runs-on: ubuntu-latest
     continue-on-error: true  # Don't fail build - capacity tests are exploratory
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: read
     
     steps:
       - name: Checkout code
@@ -214,17 +218,28 @@ jobs:
         if: github.event_name == 'pull_request' && always()
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             try {
               const summary = fs.readFileSync('capacity-summary.txt', 'utf8');
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
+              
+              // Use PR number instead of issue number for pull requests
+              const prNumber = context.payload.pull_request?.number || context.issue?.number;
+              
+              if (!prNumber) {
+                console.log('No PR number found, skipping comment');
+                return;
+              }
+              
+              await github.rest.issues.createComment({
+                issue_number: prNumber,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 body: `## 📊 Capacity Test Results\n\n\`\`\`\n${summary}\n\`\`\`\n\n[View full report artifacts](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`
               });
             } catch (error) {
               console.log('Could not read summary file or create comment:', error.message);
+              // Don't fail the workflow if commenting fails
             }
 
