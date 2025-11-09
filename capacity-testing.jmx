@@ -35,7 +35,7 @@
           <stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
         </ConfigTestElement>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="HTTP Request" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Main Page">
           <stringProp name="HTTPSampler.path">/</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
@@ -191,11 +191,10 @@ if (!prev.isSuccessful()) {
     if (responseMessage != null &amp;&amp; responseMessage.contains(&quot;lasted too long&quot;)) {
         // Use compareAndSet to ensure only one thread triggers stop
         if (stopRequested.compareAndSet(false, true)) {
-            log.error(&quot;*** DURATION ASSERTION FAILED: Response time exceeded threshold ***&quot;);
-            log.error(&quot;*** STOPPING TEST ***&quot;);
+            log.error(&quot;*** [MAIN PAGE] DURATION ASSERTION FAILED: Response time exceeded threshold ***&quot;);
             
             try {
-                ctx.getEngine().stopTest(true);
+                ctx.getThreadGroup().stop();
             } catch (Exception e) {
                 log.error(&quot;Failed to stop test: &quot; + e.getMessage());
             }
@@ -271,13 +270,12 @@ if (runtime &gt;= warmupPeriod &amp;&amp; total &gt; 50 &amp;&amp; errorWindow.s
     if (errorRate &gt; maxErrorRate) {
         // Use compareAndSet to ensure only one thread triggers the stop
         if (stopRequested.compareAndSet(false, true)) {
-            String msg = String.format(&quot;ERROR RATE EXCEEDED: %.3f%% &gt; %.2f%% (%d errors in %d sample window)&quot;, 
+            String msg = String.format(&quot;[MAIN PAGE] ERROR RATE EXCEEDED: %.3f%% &gt; %.2f%% (%d errors in %d sample window)&quot;, 
                                        errorRate, maxErrorRate, windowErrors, windowTotal);
             log.error(&quot;*** &quot; + msg + &quot; ***&quot;);
-            log.error(&quot;*** STOPPING TEST NOW ***&quot;);
             
             try {
-                ctx.getEngine().stopTest(true); // ✅ CORRECT METHOD
+                ctx.getThreadGroup().stop();
             } catch (Exception e) {
                 log.error(&quot;Failed to stop test: &quot; + e.getMessage());
             }
@@ -352,15 +350,14 @@ if (testRuntime &gt;= warmupPeriod &amp;&amp; timeSinceLastCheck &gt;= checkInte
     if (throughput &lt; minThroughput) {
         // Use compareAndSet to ensure only one thread triggers the stop
         if (stopRequested.compareAndSet(false, true)) {
-            String msg = String.format(&quot;THROUGHPUT DEGRADED: %.2f req/s &lt; %.2f req/s (samples: %d)&quot;, 
+            String msg = String.format(&quot;[MAIN PAGE] THROUGHPUT DEGRADED: %.2f req/s &lt; %.2f req/s (samples: %d)&quot;, 
                                        throughput, minThroughput, samplesAfterWarmup);
             log.error(&quot;*** &quot; + msg + &quot; ***&quot;);
-            log.error(&quot;*** STOPPING TEST DUE TO LOW THROUGHPUT ***&quot;);
             prev.setSuccessful(false);
             prev.setResponseMessage(msg);
             
             try {
-                ctx.getEngine().stopTest(true);
+                ctx.getThreadGroup().stop();
             } catch (Exception e) {
                 log.error(&quot;Failed to stop test: &quot; + e.getMessage());
             }
