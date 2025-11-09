@@ -71,6 +71,17 @@ jobs:
           BRAINTREE_PRIVATE_KEY: ${{ secrets.BRAINTREE_PRIVATE_KEY }}
           DEV_MODE: capacity-test
 
+      - name: Create test user for capacity testing
+        run: |
+          SERVER_PORT=${PORT:-6060}
+          # Try to register the test user (will fail if user already exists, which is fine)
+          curl -X POST http://localhost:${SERVER_PORT}/api/v1/auth/register \
+            -H "Content-Type: application/json" \
+            -d '{"name":"Alice","email":"alice@test.com","password":"1234567","phone":"1","address":"a","answer":"sport1"}' \
+            || echo "Test user may already exist, continuing..."
+        env:
+          PORT: ${{ secrets.PORT || '6060' }}
+
       - name: Run capacity test
         id: capacity_test
         run: |
