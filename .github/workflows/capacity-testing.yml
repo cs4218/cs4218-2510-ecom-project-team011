@@ -92,10 +92,25 @@ jobs:
           RAMP_TIME=$(grep -oP 'ThreadGroup.ramp_time.*?(\d+)' capacity-testing.jmx | grep -oP '\d+' | head -1)
           DURATION=$(grep -oP 'ThreadGroup.duration.*?(\d+)' capacity-testing.jmx | grep -oP '\d+' | head -1)
           
+          # Calculate max concurrent threads from jmeter.log (only before assertion failure)
+          MAX_CONCURRENT_THREADS=0
+          if [ -f jmeter.log ]; then
+            # Find the line number where assertion failure occurred
+            ASSERTION_LINE=$(grep -n -i "assertion" jmeter.log | head -1 | cut -d: -f1)
+            if [ ! -z "$ASSERTION_LINE" ]; then
+              # Only process "Thread started" lines before the assertion (already sorted, so last one is max)
+              MAX_CONCURRENT_THREADS=$(head -n $((ASSERTION_LINE - 1)) jmeter.log | grep "Thread started: Thread Group" | tail -1 | sed 's/.*Thread Group 1-\([0-9]*\)/\1/')
+            else
+              # No assertion found, process all lines
+              MAX_CONCURRENT_THREADS=$(grep "Thread started: Thread Group" jmeter.log | tail -1 | sed 's/.*Thread Group 1-\([0-9]*\)/\1/')
+            fi
+            if [ -z "$MAX_CONCURRENT_THREADS" ]; then
+              MAX_CONCURRENT_THREADS=0
+            fi
+          fi
+          
           # Calculate metrics from results.jtl
           if [ -f results.jtl ]; then
-            # Find max concurrent threads (allThreads is column 13)
-            MAX_CONCURRENT_THREADS=$(awk -F',' 'NR>1 {if($13>max) max=$13} END{print max+0}' results.jtl)
             
             # Find average response time (column 2 in CSV format)
             AVG_RESPONSE_TIME=$(awk -F',' 'NR>1 {sum+=$2; count++} END{if(count>0) print sum/count; else print 0}' results.jtl)
