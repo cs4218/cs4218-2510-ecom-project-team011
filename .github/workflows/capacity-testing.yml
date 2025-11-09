@@ -104,12 +104,6 @@ jobs:
             # Find min response time
             MIN_RESPONSE_TIME=$(awk -F',' 'NR>1 {if(min=="" || $2<min) min=$2} END{print min+0}' results.jtl)
             
-            # Check if test stopped early (indicates threshold exceeded)
-            STOPPED_EARLY="NO"
-            if grep -q "ERROR RATE EXCEEDED\|THROUGHPUT DEGRADED\|DURATION ASSERTION FAILED\|STOPPING TEST" jmeter.log; then
-              STOPPED_EARLY="YES"
-            fi
-            
             # Calculate throughput (requests per second)
             TOTAL_SAMPLES=$(wc -l < results.jtl)
             TOTAL_SAMPLES=$((TOTAL_SAMPLES - 1)) # Subtract header line
@@ -135,7 +129,25 @@ jobs:
             MAX_RESPONSE_TIME=0
             MIN_RESPONSE_TIME=0
             THROUGHPUT=0
-            STOPPED_EARLY="UNKNOWN"
+          fi
+          
+          # Extract stop reason from jmeter.log
+          STOP_REASON="Test completed normally"
+          if [ -f jmeter.log ]; then
+            # Look for assertion failure messages in log (lines containing "Assertion")
+            # Extract the full error message after the assertion type
+            ERROR_RATE_MSG=$(grep -i -m 1 "assertion.*ERROR RATE EXCEEDED" jmeter.log | sed 's/.*ERROR RATE EXCEEDED/ERROR RATE EXCEEDED/' | sed 's/\*\*\*//g' | sed 's/STOPPING TEST NOW//g' | xargs 2>/dev/null)
+            THROUGHPUT_MSG=$(grep -i -m 1 "assertion.*THROUGHPUT DEGRADED" jmeter.log | sed 's/.*THROUGHPUT DEGRADED/THROUGHPUT DEGRADED/' | sed 's/\*\*\*//g' | sed 's/STOPPING TEST NOW//g' | xargs 2>/dev/null)
+            DURATION_MSG=$(grep -i -m 1 "assertion.*DURATION ASSERTION FAILED" jmeter.log | sed 's/.*DURATION ASSERTION FAILED/DURATION ASSERTION FAILED/' | sed 's/\*\*\*//g' | sed 's/STOPPING TEST NOW//g' | xargs 2>/dev/null)
+            
+            # Use the first match found (priority: error rate > throughput > duration)
+            if [ ! -z "$ERROR_RATE_MSG" ]; then
+              STOP_REASON="$ERROR_RATE_MSG"
+            elif [ ! -z "$THROUGHPUT_MSG" ]; then
+              STOP_REASON="$THROUGHPUT_MSG"
+            elif [ ! -z "$DURATION_MSG" ]; then
+              STOP_REASON="$DURATION_MSG"
+            fi
           fi
           
           # Create summary report
@@ -155,6 +167,9 @@ jobs:
           - Min Response Time: ${MIN_RESPONSE_TIME} ms
           - Max Response Time: ${MAX_RESPONSE_TIME} ms
           - Throughput: ${THROUGHPUT} req/s
+          
+          Test Stop Reason:
+          - $STOP_REASON
           
           ============================================
           EOF
